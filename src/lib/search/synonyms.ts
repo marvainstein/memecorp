@@ -1,0 +1,47 @@
+/**
+ * Default bilingual synonym groups. They seed the `synonym_groups` table on first run;
+ * afterwards admins edit them from /admin/synonyms. Terms are matched after `normalize()`.
+ */
+import { FRANCHISES } from "../memes/franchises";
+
+export const DEFAULT_SYNONYM_GROUPS: string[][] = [
+  ...FRANCHISES.map((f) => f.names),
+  ["jefe", "jefa", "boss", "manager", "gerente", "supervisor", "lider", "superior", "ceo"],
+  ["reunion", "reuniones", "meeting", "meetings", "junta", "call", "llamada", "standup", "daily", "sync"],
+  ["videollamada", "zoom", "teams", "meet", "videocall", "camara", "mute", "silenciado"],
+  ["email", "mail", "correo", "e mail", "inbox", "bandeja"],
+  ["lunes", "monday", "mondays"],
+  ["viernes", "friday", "fin de semana", "weekend", "finde"],
+  ["cansado", "cansada", "tired", "agotado", "agotada", "exhausted", "sleepy", "sueno", "fiaca"],
+  ["burnout", "quemado", "quemada", "burnt out", "burned out", "agotamiento", "estres", "stress", "stressed", "estresado"],
+  ["sueldo", "salario", "salary", "pay", "paycheck", "aumento", "raise", "plata", "dinero", "money", "cobrar"],
+  ["renuncia", "renunciar", "renuncio", "quit", "quitting", "resign", "resignation", "me voy"],
+  ["despido", "despedido", "fired", "layoff", "layoffs", "echado"],
+  ["vacaciones", "vacation", "holiday", "holidays", "pto", "feriado", "licencia", "descanso"],
+  ["trabajo", "work", "laburo", "job", "oficina", "office", "empresa", "company", "corporate", "corporativo"],
+  ["remoto", "remote", "home office", "wfh", "teletrabajo", "desde casa"],
+  ["companero", "companera", "companeros", "coworker", "coworkers", "colega", "colegas", "equipo", "team"],
+  ["rrhh", "hr", "recursos humanos", "human resources", "people"],
+  ["entrevista", "interview", "postulacion", "cv", "curriculum", "resume", "busqueda laboral"],
+  ["excel", "planilla", "spreadsheet", "hoja de calculo", "sheets", "formula"],
+  ["powerpoint", "ppt", "presentacion", "presentation", "slides", "diapositivas", "deck"],
+  ["programacion", "programming", "codigo", "code", "developer", "dev", "programador", "software"],
+  ["bug", "error", "falla", "bugs", "crash", "roto", "broken"],
+  ["deploy", "produccion", "production", "prod", "release", "lanzamiento"],
+  ["cliente", "clientes", "client", "clients", "customer", "customers"],
+  ["deadline", "fecha limite", "entrega", "urgente", "urgent", "asap", "para ayer"],
+  ["feliz", "happy", "contento", "contenta", "alegre", "joy"],
+  ["triste", "sad", "llorar", "crying", "llorando", "cry"],
+  ["enojado", "enojada", "angry", "furioso", "mad", "rage", "bronca", "ira"],
+  ["sarcasmo", "sarcastic", "sarcastico", "ironia", "ironic", "ironico"],
+  ["confundido", "confused", "confusion", "no entiendo", "huh"],
+  ["sorprendido", "shocked", "shock", "sorpresa", "surprised", "omg", "wtf"],
+  ["caos", "chaos", "desastre", "disaster", "incendio", "fire", "this is fine", "todo bien"],
+  ["cafe", "coffee", "mate", "cafecito"],
+  ["productividad", "productivity", "productivo", "productive", "rendimiento", "performance", "kpi", "kpis"],
+  ["sinergia", "synergy", "alineados", "aligned", "circle back", "touch base"],
+  ["celebrar", "celebrating", "celebracion", "party", "fiesta", "festejo", "logro"],
+  ["incomodo", "awkward", "cringe", "verguenza", "embarrassing"],
+  ["pasivo agresivo", "passive aggressive", "per my last email", "segun mi ultimo correo", "como dije"],
+  ["meme", "memes", "chiste", "humor", "funny", "gracioso"],
+];
