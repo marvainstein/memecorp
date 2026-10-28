@@ -20,6 +20,8 @@ export type Candidate = {
   languages?: string[];
   /** Already known to be about work/office humor (e.g. it came from a work-humor community or query). */
   topical?: boolean;
+  /** Only import it if its text (title, caption or OCR) mentions one of the workplace shows. */
+  requireFranchise?: boolean;
   nsfw?: boolean;
   score?: number;
   license?: string;

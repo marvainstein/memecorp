@@ -32,7 +32,7 @@ Cada **fuente** (`import_sources`) usa un **adaptador** (`src/lib/importers/adap
 | Imgflip — plantillas de reacción | API pública de Imgflip | nada |
 | Imgflip — plantillas de series de oficina | Búsqueda pública de plantillas de Imgflip, por serie y personaje | nada |
 | Lemmy — humor laboral | API abierta de Lemmy (comunidades + búsquedas) | nada |
-| Lemmy — fans de series de oficina | Comunidades de fans (`dundermifflin`, `severance`, `itcrowd`) | nada |
+| Lemmy — fans de series de oficina | Comunidades de fans (`dundermifflin`, `severance`, `itcrowd`) + búsquedas por serie en comunidades de memes | nada |
 | Reddit — humor corporativo | **API oficial** de Reddit (OAuth, app tipo *script*) | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` |
 | Pinterest — tableros | **API oficial v5** de Pinterest | `PINTEREST_ACCESS_TOKEN` + IDs de tableros |
 | Feeds RSS / Atom | Cheerio (XML) | URLs de feeds |
@@ -45,7 +45,9 @@ El catálogo solo tiene memes reales publicados en esas fuentes; MemeDesk no gen
 gente busca por nombre (*The Office*, *Parks and Recreation*, Nathan Fielder, *Office Space*, *Severance*, *Silicon Valley*,
 *The IT Crowd*, *Succession*, *Brooklyn Nine-Nine*, *Superstore*, *Mad Men*) están en `src/lib/memes/franchises.ts`: de ahí salen
 las búsquedas de plantillas, los sinónimos (“parks and rec” = “parks and recreation”) y el etiquetado automático por personajes y
-frases detectados en el título, el texto o el OCR. Para sumar una serie, agregala a esa lista.
+frases detectados en el título, el texto o el OCR (solo términos inequívocos: “Lumbergh” sí, “office space” no). Las búsquedas
+en Lemmy solo cuentan resultados de comunidades de memes, así no entran noticias ni hilos de discusión. Para sumar una serie,
+agregala a esa lista.
 
 **Pipeline por candidato:** ya visto (por ID de origen o URL) → descarte · lista de bloqueo de contenido → descarte · descarga con límite de
 tamaño · solo imágenes estáticas ≥ 200 px · **OCR** del texto impreso (tesseract.js, español + inglés, local) · filtro de temática laboral

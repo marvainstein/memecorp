@@ -69,7 +69,7 @@ export function isWorkRelated(text: string): boolean {
 /** Tags of every workplace show the text mentions (see FRANCHISES), so searching the show's name finds it. */
 export function franchiseTags(text: string) {
   const norm = ` ${normalize(text)} `;
-  const found = FRANCHISES.filter((f) => [...f.terms, ...f.names].some((t) => norm.includes(` ${normalize(t)} `)));
+  const found = FRANCHISES.filter((f) => f.terms.some((t) => norm.includes(` ${normalize(t)} `)));
   return { tags: found.flatMap(franchiseTagList), categories: found.length ? ["series-peliculas"] : [] };
 }
 

@@ -21,16 +21,15 @@ export const DEFAULT_SOURCES: SourceSeed[] = [
     enabled: true,
     config: {
       instance: "https://lemmy.world",
-      communities: ["workreform@lemmy.world", "programmer_humor@programming.dev", "memes@lemmy.world"],
-      // Posts from these are on-topic by definition; the rest must mention work/office topics.
-      topical: ["workreform@lemmy.world", "programmer_humor@programming.dev"],
+      // Posts must mention work/office topics (title or OCR); search results only count from meme communities.
+      communities: ["programmer_humor@programming.dev", "memes@lemmy.world"],
+      topical: [],
       defaults: {
         "programmer_humor@programming.dev": { tags: ["programacion", "developer"], categories: ["programacion"] },
-        "workreform@lemmy.world": { tags: ["trabajo", "work"], categories: ["burnout"] },
       },
-      queries: ["corporate", "office meme", "my boss", "meeting", "monday", "coworker", "work from home", "salary", "excel"],
+      queries: ["corporate", "office meme", "my boss", "my manager", "coworker", "work meme", "meeting email", "salary"],
       sort: "TopMonth",
-      minScore: 20,
+      minScore: 30,
       maxPages: 5,
     },
   },
@@ -51,17 +50,28 @@ export const DEFAULT_SOURCES: SourceSeed[] = [
     enabled: true,
     config: {
       instance: "https://lemmy.world",
-      communities: ["dundermifflin@piefed.jeena.net", "dundermifflin@lemmy.ml", "severance@lemmy.world", "itcrowd@lemmy.world"],
-      topical: ["dundermifflin@piefed.jeena.net", "dundermifflin@lemmy.ml", "severance@lemmy.world", "itcrowd@lemmy.world"],
+      communities: [
+        "dundermifflin@piefed.jeena.net", "dundermifflin@lemmy.ml", "dundermifflin@lemm.ee", "severance@lemmy.world", "itcrowd@lemmy.world",
+      ],
+      topical: [
+        "dundermifflin@piefed.jeena.net", "dundermifflin@lemmy.ml", "dundermifflin@lemm.ee", "severance@lemmy.world", "itcrowd@lemmy.world",
+      ],
       defaults: {
         "dundermifflin@piefed.jeena.net": { tags: ["the office", "dunder mifflin", "la oficina"], categories: ["series-peliculas"] },
         "dundermifflin@lemmy.ml": { tags: ["the office", "dunder mifflin", "la oficina"], categories: ["series-peliculas"] },
+        "dundermifflin@lemm.ee": { tags: ["the office", "dunder mifflin", "la oficina"], categories: ["series-peliculas"] },
         "severance@lemmy.world": { tags: ["severance", "lumon"], categories: ["series-peliculas"] },
         "itcrowd@lemmy.world": { tags: ["the it crowd", "it crowd"], categories: ["series-peliculas"] },
       },
-      queries: [],
+      // Searched across all of Lemmy; results must mention the show (title, caption or OCR).
+      queries: [
+        "the office", "dunder mifflin", "michael scott", "dwight schrute", "parks and rec", "ron swanson", "leslie knope",
+        "nathan fielder", "nathan for you", "severance", "lumon", "silicon valley", "gilfoyle", "it crowd", "office space",
+        "lumbergh", "brooklyn 99", "succession", "mad men",
+      ],
+      showQueries: true,
       sort: "TopAll",
-      minScore: 15,
+      minScore: 25,
       maxPages: 3,
     },
   },

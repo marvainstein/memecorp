@@ -2,7 +2,7 @@ import sharp from "sharp";
 import { config } from "../config";
 import { query } from "../db";
 import { ingestImage, newId } from "../memes/ingest";
-import { autoTag, isBlocked, isWorkRelated } from "./autotag";
+import { autoTag, franchiseTags, isBlocked, isWorkRelated } from "./autotag";
 import { HttpError, PoliteHttp, ROBOTS_BLOCKED } from "./http";
 import { ocrImage } from "./ocr";
 import { ADAPTERS } from "./registry";
@@ -181,7 +181,10 @@ export async function runSource(sourceId: string, trigger: "schedule" | "manual"
           await markSeen(sourceId, c.externalId, "blocked-content");
           continue;
         }
-        if (!c.topical && !isWorkRelated(ocrText)) {
+        const offTopic = c.requireFranchise
+          ? !franchiseTags([c.title, c.altText, ocrText].filter(Boolean).join(" ")).tags.length
+          : !c.topical && !isWorkRelated(ocrText);
+        if (offTopic) {
           summary.skipped++;
           await markSeen(sourceId, c.externalId, "off-topic");
           continue;

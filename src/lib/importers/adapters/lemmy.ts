@@ -13,6 +13,8 @@ type Cursor = { page?: number };
 /**
  * Lemmy (federated, open API, no key needed). Reads communities and/or search queries.
  * config: { instance, communities: ["memes@lemmy.world"], queries: ["corporate"], topical: ["workreform@lemmy.world"], sort, minScore, maxPages }
+ * Search results only count from meme communities (`searchCommunities`, a regex on the community name),
+ * so news and discussion threads stay out. With `showQueries`, they must also mention a workplace show.
  */
 export const lemmyAdapter: Adapter = {
   id: "lemmy",
@@ -28,6 +30,7 @@ export const lemmyAdapter: Adapter = {
     const maxPages = Number(config.maxPages ?? 5);
     const topical = new Set(strings(config.topical).map((c) => c.toLowerCase()));
     const defaults = (config.defaults ?? {}) as Record<string, { tags?: string[]; categories?: string[] }>;
+    const memeCommunity = new RegExp(String(config.searchCommunities || "meme|humou?r|funny|shitpost|comic|joke"), "i");
     // Walk one page deeper each run so the catalog keeps growing, then start over.
     const page = (((cursor as Cursor | null)?.page ?? 0) % maxPages) + 1;
 
@@ -57,6 +60,7 @@ export const lemmyAdapter: Adapter = {
           if (!url || !(isImageUrl(url) || p.post.url_content_type?.startsWith("image/"))) continue;
           if (/\.gif(\?|$)/i.test(url) || p.post.url_content_type === "image/gif") continue;
           if (p.post.nsfw || p.community.nsfw || p.counts.score < minScore) continue;
+          if (req.query && !memeCommunity.test(p.community.name)) continue;
           const text = `${p.post.name} ${p.post.body ?? ""} ${p.post.alt_text ?? ""}`;
           candidates.push({
             externalId: p.post.ap_id,
@@ -70,6 +74,7 @@ export const lemmyAdapter: Adapter = {
             tags: [...(req.query ? [req.query] : []), ...(defaults[req.community ?? ""]?.tags ?? [])],
             categories: defaults[req.community ?? ""]?.categories,
             topical: req.onTopic || isWorkRelated(text),
+            requireFranchise: Boolean(req.query && config.showQueries),
             score: p.counts.score,
           });
         }
