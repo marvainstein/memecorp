@@ -1,7 +1,7 @@
 import { query } from "../db";
 import { storage } from "../storage";
 import { clampText, normalize, parseList, slugify } from "../text";
-import { isCategory, isEmotion, taxonomyKeywords } from "./taxonomy";
+import { isCategory, taxonomyKeywords } from "./taxonomy";
 import type { Meme, MemeInput, MemeStatus } from "./types";
 
 export type MemeRow = {
@@ -28,7 +28,6 @@ export type MemeRow = {
   tags: string[];
   synonyms: string[];
   categories: string[];
-  emotions: string[];
   status: MemeStatus;
   status_reason: string | null;
   submitter_note: string | null;
@@ -43,7 +42,7 @@ export type MemeRow = {
 /** Columns needed to build a `Meme`; avoids shipping tsvectors around. */
 export const MEME_COLUMNS = `id, slug, title, description, alt_text, ocr_text, source_url, source_name, credit, license,
   origin, storage_key, thumb_key, mime, format, width, height, bytes, sha256, languages, tags, synonyms, categories,
-  emotions, status, status_reason, submitter_note, dominant_color, download_count, share_count, view_count,
+  status, status_reason, submitter_note, dominant_color, download_count, share_count, view_count,
   created_at, updated_at`;
 
 const iso = (d: string | Date) => (d instanceof Date ? d.toISOString() : new Date(d).toISOString());
@@ -72,7 +71,6 @@ export function toMeme(row: MemeRow): Meme {
     tags: row.tags ?? [],
     synonyms: row.synonyms ?? [],
     categories: row.categories ?? [],
-    emotions: row.emotions ?? [],
     status: row.status,
     statusReason: row.status_reason,
     dominantColor: row.dominant_color,
@@ -102,7 +100,6 @@ export function sanitizeInput(input: MemeInput) {
   if (input.tags !== undefined) out.tags = parseList(input.tags, 40);
   if (input.synonyms !== undefined) out.synonyms = parseList(input.synonyms, 40);
   if (input.categories !== undefined) out.categories = parseList(input.categories).filter(isCategory);
-  if (input.emotions !== undefined) out.emotions = parseList(input.emotions).filter(isEmotion);
   if (input.status !== undefined) out.status = input.status;
   if (input.statusReason !== undefined) out.status_reason = clampText(input.statusReason, 500) || null;
   if (input.submitterNote !== undefined) out.submitter_note = clampText(input.submitterNote, 1000) || null;
@@ -136,10 +133,9 @@ export async function updateMeme(id: string, input: MemeInput): Promise<Meme | n
   const values = sanitizeInput(input);
   const current = await getMemeRow(id);
   if (!current) return null;
-  // Keep the taxonomy keywords in sync so label searches ("cansado") keep working.
-  const emotions = (values.emotions as string[] | undefined) ?? current.emotions;
+  // Keep the taxonomy keywords in sync so label searches ("jefe") keep working.
   const categories = (values.categories as string[] | undefined) ?? current.categories;
-  values.keywords = taxonomyKeywords(emotions, categories);
+  values.keywords = taxonomyKeywords(categories);
   values.updated_at = new Date().toISOString();
 
   const keys = Object.keys(values);
@@ -186,19 +182,18 @@ export async function incrementCounter(id: string, counter: keyof typeof COUNTER
   await query(`UPDATE memes SET ${COUNTERS[counter]} = ${COUNTERS[counter]} + 1 WHERE id = $1 AND status = 'active'`, [id]);
 }
 
-/** Memes sharing tags, emotions or categories with the given one. */
-export async function relatedMemes(meme: Pick<Meme, "id" | "tags" | "emotions" | "categories">, limit = 12) {
+/** Memes sharing tags or categories with the given one. */
+export async function relatedMemes(meme: Pick<Meme, "id" | "tags" | "categories">, limit = 12) {
   const rows = await query<MemeRow>(
     `SELECT ${MEME_COLUMNS},
        (cardinality(ARRAY(SELECT unnest(tags) INTERSECT SELECT unnest($2::text[]))) * 3
-      + cardinality(ARRAY(SELECT unnest(emotions) INTERSECT SELECT unnest($3::text[]))) * 2
-      + cardinality(ARRAY(SELECT unnest(categories) INTERSECT SELECT unnest($4::text[])))) AS overlap
+      + cardinality(ARRAY(SELECT unnest(categories) INTERSECT SELECT unnest($3::text[])))) AS overlap
      FROM memes
      WHERE status = 'active' AND id <> $1
-       AND (tags && $2::text[] OR emotions && $3::text[] OR categories && $4::text[])
+       AND (tags && $2::text[] OR categories && $3::text[])
      ORDER BY overlap DESC, download_count DESC, created_at DESC
-     LIMIT $5`,
-    [meme.id, meme.tags, meme.emotions, meme.categories, limit],
+     LIMIT $4`,
+    [meme.id, meme.tags, meme.categories, limit],
   );
   return rows.map(toMeme);
 }
@@ -267,9 +262,9 @@ export async function stats() {
   const zeroSearches = await query<{ display: string; count: number }>(
     "SELECT display, count FROM search_log WHERE last_results = 0 ORDER BY count DESC, last_at DESC LIMIT 12",
   );
-  const byEmotion = await query<{ emotion: string; n: number }>(
-    `SELECT e AS emotion, count(*)::int AS n FROM memes, unnest(emotions) e WHERE status = 'active'
-     GROUP BY e ORDER BY n DESC`,
+  const byCategory = await query<{ category: string; n: number }>(
+    `SELECT c AS category, count(*)::int AS n FROM memes, unnest(categories) c WHERE status = 'active'
+     GROUP BY c ORDER BY n DESC`,
   );
-  return { counts: { ...counts, bytes: Number(counts.bytes) }, top: top.map(toMeme), topSearches, zeroSearches, byEmotion };
+  return { counts: { ...counts, bytes: Number(counts.bytes) }, top: top.map(toMeme), topSearches, zeroSearches, byCategory };
 }

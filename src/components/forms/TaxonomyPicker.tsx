@@ -1,14 +1,13 @@
-import { CATEGORIES, EMOTIONS, LANGUAGES, type TaxonomyItem } from "@/lib/memes/taxonomy";
+import { CATEGORIES, LANGUAGES, type TaxonomyItem } from "@/lib/memes/taxonomy";
 
 type Props = {
-  name: "emotions" | "categories" | "languages";
+  name: "categories" | "languages";
   defaultValue?: string[];
   legend?: string;
   columns?: string;
 };
 
 const SOURCES: Record<Props["name"], { items: readonly (TaxonomyItem | { slug: string; label: string })[]; legend: string }> = {
-  emotions: { items: EMOTIONS, legend: "Emociones" },
   categories: { items: CATEGORIES, legend: "Categorías" },
   languages: { items: LANGUAGES, legend: "Idiomas del texto" },
 };

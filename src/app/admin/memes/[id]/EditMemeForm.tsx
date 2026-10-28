@@ -40,7 +40,6 @@ export function EditMemeForm({ meme }: { meme: Meme }) {
       sourceName: text("sourceName") || null,
       credit: text("credit") || null,
       license: text("license"),
-      emotions: f.getAll("emotions").map(String),
       categories: f.getAll("categories").map(String),
       languages: f.getAll("languages").map(String),
     });
@@ -74,7 +73,6 @@ export function EditMemeForm({ meme }: { meme: Meme }) {
         Texto alternativo
         <input name="altText" defaultValue={meme.altText} className="win-field mt-1" maxLength={500} />
       </label>
-      <TaxonomyPicker name="emotions" defaultValue={meme.emotions} />
       <TaxonomyPicker name="categories" defaultValue={meme.categories} />
       <TaxonomyPicker name="languages" defaultValue={meme.languages} columns="grid-cols-2" />
       <div className="grid gap-2 sm:grid-cols-2">

@@ -49,7 +49,7 @@ frases detectados en el título, el texto o el OCR. Para sumar una serie, agrega
 
 **Pipeline por candidato:** ya visto (por ID de origen o URL) → descarte · lista de bloqueo de contenido → descarte · descarga con límite de
 tamaño · solo imágenes estáticas ≥ 200 px · **OCR** del texto impreso (tesseract.js, español + inglés, local) · filtro de temática laboral
-(si la fuente no es temática por definición) · auto-etiquetado (etiquetas, emociones, categorías, idioma) · deduplicación por **SHA-256** y
+(si la fuente no es temática por definición) · auto-etiquetado (etiquetas, categorías, series, idioma) · deduplicación por **SHA-256** y
 **hash perceptual de 256 bits** · miniatura WebP · guardado en storage + base.
 
 **Resiliencia:**
@@ -77,7 +77,7 @@ tamaño · solo imágenes estáticas ≥ 200 px · **OCR** del texto impreso (te
 y cada término se expande con sus **sinónimos bilingües** (editables en `/admin/synonyms`). Se buscan prefijos en tres configuraciones de
 FTS (con stemming en español e inglés) **o** similitud de trigramas (errores de tipeo: “reunon”). El ranking combina `ts_rank_cd`, similitud,
 coincidencia en el título y popularidad. Si ninguna coincidencia tiene todas las palabras, se relaja a “alguna”. Autocompletado desde
-etiquetas, títulos, búsquedas frecuentes, emociones y categorías.
+etiquetas, títulos, búsquedas frecuentes y categorías.
 
 ## Moderación y retirada
 

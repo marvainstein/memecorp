@@ -23,7 +23,6 @@ export type Meme = {
   tags: string[];
   synonyms: string[];
   categories: string[];
-  emotions: string[];
   status: MemeStatus;
   statusReason: string | null;
   dominantColor: string | null;
@@ -51,7 +50,6 @@ export type MemeInput = {
   tags?: string[];
   synonyms?: string[];
   categories?: string[];
-  emotions?: string[];
   status?: MemeStatus;
   statusReason?: string | null;
   submitterNote?: string | null;

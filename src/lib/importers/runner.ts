@@ -200,7 +200,6 @@ export async function runSource(sourceId: string, trigger: "schedule" | "manual"
             credit: c.author ?? null,
             license: c.license ?? "fair-use",
             tags: tagged.tags,
-            emotions: tagged.emotions,
             categories: tagged.categories,
             languages: tagged.languages,
             status: config.import.autoPublish ? "active" : "pending",

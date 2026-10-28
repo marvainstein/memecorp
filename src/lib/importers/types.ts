@@ -16,7 +16,6 @@ export type Candidate = {
   /** Human label, e.g. "Reddit r/ProgrammerHumor". */
   sourceName: string;
   tags?: string[];
-  emotions?: string[];
   categories?: string[];
   languages?: string[];
   /** Already known to be about work/office humor (e.g. it came from a work-humor community or query). */

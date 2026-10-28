@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { listSources, recentRuns, sourceProblem } from "@/lib/importers/runner";
 import { stats } from "@/lib/memes/repository";
-import { EMOTIONS } from "@/lib/memes/taxonomy";
+import { CATEGORIES } from "@/lib/memes/taxonomy";
 import { formatBytes } from "@/lib/text";
 import { adminSrc } from "./paths";
 import { StatusBadge } from "./ui";
@@ -121,11 +121,11 @@ export default async function AdminDashboard() {
             ))}
             {!s.zeroSearches.length && <li>Ninguna.</li>}
           </ul>
-          <p className="mt-2 text-win-dark">Memes por emoción:</p>
+          <p className="mt-2 text-win-dark">Memes por categoría:</p>
           <div className="flex flex-wrap gap-1">
-            {s.byEmotion.map((e) => (
-              <span key={e.emotion} className="win-chip">
-                {EMOTIONS.find((x) => x.slug === e.emotion)?.es ?? e.emotion}: {e.n}
+            {s.byCategory.map((c) => (
+              <span key={c.category} className="win-chip">
+                {CATEGORIES.find((x) => x.slug === c.category)?.es ?? c.category}: {c.n}
               </span>
             ))}
           </div>

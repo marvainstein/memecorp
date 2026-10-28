@@ -1,29 +1,8 @@
 /**
  * Fixed taxonomies. Slugs are what gets stored in the database; labels and keywords
- * are folded into each meme's search document so "cansado" finds memes tagged `tired`.
+ * are folded into each meme's search document so "jefe" finds memes in `jefes`.
  */
 export type TaxonomyItem = { slug: string; en: string; es: string; keywords: string[] };
-
-export const EMOTIONS: TaxonomyItem[] = [
-  { slug: "happy", en: "Happy", es: "Feliz", keywords: ["contento", "alegre", "felicidad", "joy", "glad", "smile", "sonrisa"] },
-  { slug: "sad", en: "Sad", es: "Triste", keywords: ["tristeza", "llorar", "crying", "llanto", "depre", "bajon"] },
-  { slug: "angry", en: "Angry", es: "Enojado", keywords: ["enojo", "furioso", "ira", "rabia", "mad", "rage", "bronca"] },
-  { slug: "sarcastic", en: "Sarcastic", es: "Sarcástico", keywords: ["sarcasmo", "ironia", "ironico", "sarcasm", "irony"] },
-  { slug: "tired", en: "Tired", es: "Cansado", keywords: ["cansancio", "sueno", "agotado", "exhausted", "sleepy", "fiaca"] },
-  { slug: "burnt-out", en: "Burnt out", es: "Quemado", keywords: ["burnout", "agotamiento", "quemado", "estres", "stress"] },
-  { slug: "awkward", en: "Awkward", es: "Incómodo", keywords: ["incomodo", "verguenza", "cringe", "awkward", "nervioso"] },
-  { slug: "shocked", en: "Shocked", es: "En shock", keywords: ["sorpresa", "sorprendido", "shock", "surprised", "omg", "incredulo"] },
-  { slug: "passive-aggressive", en: "Passive aggressive", es: "Pasivo-agresivo", keywords: ["pasivo agresivo", "per my last email", "segun mi ultimo correo"] },
-  { slug: "fake-enthusiasm", en: "Fake enthusiasm", es: "Entusiasmo fingido", keywords: ["fingido", "falso", "forzado", "fake smile", "sonrisa falsa"] },
-  { slug: "relatable", en: "Relatable", es: "Me identifica", keywords: ["identificado", "literal yo", "same", "mood", "tal cual"] },
-  { slug: "chaos", en: "Chaos", es: "Caos", keywords: ["caos", "desastre", "incendio", "fire", "everything is fine", "todo bien"] },
-  { slug: "confused", en: "Confused", es: "Confundido", keywords: ["confusion", "no entiendo", "huh", "what", "que"] },
-  { slug: "excited", en: "Excited", es: "Emocionado", keywords: ["emocion", "hype", "entusiasmo", "excited", "ansioso"] },
-  { slug: "dead-inside", en: "Dead inside", es: "Muerto por dentro", keywords: ["vacio", "sin alma", "dead inside", "nada me importa"] },
-  { slug: "overwhelmed", en: "Overwhelmed", es: "Abrumado", keywords: ["abrumado", "saturado", "desbordado", "too much", "colapsado"] },
-  { slug: "unbothered", en: "Unbothered", es: "Me da igual", keywords: ["tranqui", "relajado", "chill", "no me importa", "zen"] },
-  { slug: "celebrating", en: "Celebrating", es: "Celebrando", keywords: ["celebrar", "festejo", "fiesta", "party", "viernes", "logro"] },
-];
 
 export const CATEGORIES: TaxonomyItem[] = [
   { slug: "reuniones", en: "Meetings", es: "Reuniones", keywords: ["meeting", "junta", "call", "llamada", "podria haber sido un email"] },
@@ -74,21 +53,14 @@ export const REPORT_REASONS = [
   { slug: "other", label: "Otro motivo" },
 ] as const;
 
-const emotionSlugs = new Set(EMOTIONS.map((e) => e.slug));
 const categorySlugs = new Set(CATEGORIES.map((c) => c.slug));
 
-export const isEmotion = (slug: string) => emotionSlugs.has(slug);
 export const isCategory = (slug: string) => categorySlugs.has(slug);
-export const emotionLabel = (slug: string) => EMOTIONS.find((e) => e.slug === slug)?.en ?? slug;
 export const categoryLabel = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.es ?? slug;
 
 /** Text folded into the search document for the given taxonomy slugs. */
-export function taxonomyKeywords(emotions: string[], categories: string[]): string {
+export function taxonomyKeywords(categories: string[]): string {
   const parts: string[] = [];
-  for (const slug of emotions) {
-    const e = EMOTIONS.find((x) => x.slug === slug);
-    if (e) parts.push(e.en, e.es, ...e.keywords);
-  }
   for (const slug of categories) {
     const c = CATEGORIES.find((x) => x.slug === slug);
     if (c) parts.push(c.en, c.es, ...c.keywords);

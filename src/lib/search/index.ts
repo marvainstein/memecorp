@@ -1,6 +1,6 @@
 import { query } from "../db";
 import { MEME_COLUMNS, toMeme, type MemeRow } from "../memes/repository";
-import { CATEGORIES, EMOTIONS, isCategory, isEmotion } from "../memes/taxonomy";
+import { CATEGORIES, isCategory } from "../memes/taxonomy";
 import type { Meme } from "../memes/types";
 import { normalize } from "../text";
 import { buildSynonymIndex, parseQuery, type SynonymIndex } from "./query";
@@ -10,7 +10,6 @@ export type SortMode = "relevance" | "popular" | "new";
 export type SearchParams = {
   q?: string;
   category?: string;
-  emotion?: string;
   format?: string;
   lang?: string;
   sort?: SortMode;
@@ -58,7 +57,6 @@ export function parseSearchParams(input: Record<string, string | string[] | unde
   return {
     q: get("q")?.slice(0, 200),
     category: isCategory(get("category") ?? "") ? get("category") : undefined,
-    emotion: isEmotion(get("emotion") ?? "") ? get("emotion") : undefined,
     format: format && ["jpg", "png", "webp"].includes(format) ? format : undefined,
     lang: get("lang") === "es" || get("lang") === "en" ? get("lang") : undefined,
     sort: sort === "popular" || sort === "new" ? sort : "relevance",
@@ -81,7 +79,6 @@ export async function search(params: SearchParams): Promise<SearchResult> {
     return `$${values.length}`;
   };
   if (params.category) filters.push(`m.categories @> ARRAY[${add(params.category)}]::text[]`);
-  if (params.emotion) filters.push(`m.emotions @> ARRAY[${add(params.emotion)}]::text[]`);
   if (params.format) filters.push(`m.format = ${add(params.format)}`);
   if (params.lang) filters.push(`m.languages @> ARRAY[${add(params.lang)}]::text[]`);
 
@@ -175,9 +172,9 @@ async function logSearch(raw: string, normalized: string, results: number) {
 
 export type Suggestion = {
   label: string;
-  kind: "query" | "tag" | "title" | "emotion" | "category";
+  kind: "query" | "tag" | "title" | "category";
   /** For taxonomy suggestions: the filter to apply instead of a text query. */
-  filter?: { emotion?: string; category?: string };
+  filter?: { category?: string };
 };
 
 const suggestCache = new Map<string, { at: number; items: Suggestion[] }>();
@@ -189,11 +186,6 @@ export async function suggest(input: string, limit = 8): Promise<Suggestion[]> {
   if (cached && Date.now() - cached.at < 30_000) return cached.items;
 
   const taxonomy: Suggestion[] = [
-    ...EMOTIONS.filter((e) => [e.en, e.es, e.slug].some((l) => normalize(l).startsWith(prefix))).map((e) => ({
-      label: `${e.es} · ${e.en}`,
-      kind: "emotion" as const,
-      filter: { emotion: e.slug },
-    })),
     ...CATEGORIES.filter((c) => [c.en, c.es].some((l) => normalize(l).startsWith(prefix))).map((c) => ({
       label: c.es,
       kind: "category" as const,

@@ -1,5 +1,5 @@
 import { FRANCHISES, franchiseTagList } from "../memes/franchises";
-import { CATEGORIES, EMOTIONS, type TaxonomyItem } from "../memes/taxonomy";
+import { CATEGORIES, type TaxonomyItem } from "../memes/taxonomy";
 import { STOPWORDS } from "../search/query";
 import { DEFAULT_SYNONYM_GROUPS } from "../search/synonyms";
 import { normalize } from "../text";
@@ -20,7 +20,7 @@ export function detectLanguage(text: string): string[] {
   return es > en ? ["es"] : ["en"];
 }
 
-/** Words too common in captions to say anything about a meme's emotion or topic. */
+/** Words too common in captions to say anything about a meme's topic. */
 const GENERIC = new Set(["what", "que", "same", "mood", "smile", "face", "cara", "todo bien", "people", "call", "meet", "daily", "pay", "money", "it", "tv"]);
 
 /** Every normalized keyword that points at a taxonomy item. */
@@ -73,14 +73,12 @@ export function franchiseTags(text: string) {
   return { tags: found.flatMap(franchiseTagList), categories: found.length ? ["series-peliculas"] : [] };
 }
 
-/** Derives tags, emotions, categories and language from whatever text the source gave us. */
+/** Derives tags, categories and language from whatever text the source gave us. */
 export function autoTag(c: Candidate, extraTags: string[] = []) {
   const text = [c.title, c.description, c.altText, ...(c.tags ?? [])].filter(Boolean).join(" ");
   const norm = normalize(text);
   const words = new Set(norm.split(" ").filter(Boolean));
 
-  const emotions = new Set(c.emotions ?? []);
-  for (const e of EMOTIONS) if (keywordsOf(e).some((k) => matches(norm, words, k))) emotions.add(e.slug);
   const franchise = franchiseTags(text);
   const categories = new Set([...(c.categories ?? []), ...franchise.categories]);
   for (const cat of CATEGORIES) if (keywordsOf(cat).some((k) => matches(norm, words, k))) categories.add(cat.slug);
@@ -93,7 +91,6 @@ export function autoTag(c: Candidate, extraTags: string[] = []) {
 
   return {
     tags: [...tags].slice(0, 16),
-    emotions: [...emotions].slice(0, 5),
     categories: [...categories].slice(0, 4),
     languages: c.languages?.length ? c.languages : detectLanguage(text),
   };

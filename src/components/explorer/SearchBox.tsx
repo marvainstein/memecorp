@@ -8,7 +8,7 @@ type Props = {
   value: string;
   onChange: (value: string) => void;
   onSubmit: (value: string) => void;
-  onPickFilter: (filter: { emotion?: string; category?: string }) => void;
+  onPickFilter: (filter: { category?: string }) => void;
 };
 
 export type SearchBoxHandle = { focus: () => void };
@@ -17,7 +17,6 @@ const KIND_LABEL: Record<Suggestion["kind"], string> = {
   query: "búsqueda",
   tag: "etiqueta",
   title: "meme",
-  emotion: "emoción",
   category: "categoría",
 };
 

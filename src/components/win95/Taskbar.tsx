@@ -118,7 +118,7 @@ export function Taskbar() {
             <p>
               <b>MemeDesk 98</b> — el buscador universal de memes corporativos estáticos.
             </p>
-            <p>Gratis, sin cuentas, sin límites. Buscá por palabras, frases, situaciones o emociones, en español o inglés.</p>
+            <p>Gratis, sin cuentas, sin límites. Buscá por palabras, frases, situaciones o series, en español o inglés.</p>
             <p>
               El catálogo se indexa automáticamente desde fuentes públicas y se mantiene bajo el marco de parodia y uso legítimo. Cada meme
               conserva un enlace a su origen. Si sos titular de derechos sobre una imagen, usá el <Link href="/aviso-y-retirada">procedimiento de aviso y retirada</Link>.

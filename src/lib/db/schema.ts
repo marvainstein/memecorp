@@ -202,6 +202,12 @@ WHERE id = 'reddit-work-humor' AND jsonb_typeof(config->'topical') = 'array'
   AND NOT (config->'topical') ? 'DunderMifflin';
 `,
   },
+  {
+    version: 4,
+    name: "drop_emotions",
+    // Memes are organized by category only.
+    sql: `ALTER TABLE memes DROP COLUMN IF EXISTS emotions;`,
+  },
 ];
 
 export async function migrate(db: Db): Promise<void> {

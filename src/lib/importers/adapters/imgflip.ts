@@ -2,44 +2,44 @@ import * as cheerio from "cheerio";
 import { FRANCHISES, franchiseById, franchiseTagList, type Franchise } from "../../memes/franchises";
 import type { Adapter, Candidate } from "../types";
 
-/** Hand-tagged emotions/tags for well-known reaction templates (by Imgflip template name). */
-const KNOWN: Record<string, { tags: string[]; emotions: string[]; categories?: string[] }> = {
-  "Drake Hotline Bling": { tags: ["drake", "preferencia", "prefer", "esto no esto si"], emotions: ["relatable"] },
-  "Two Buttons": { tags: ["dos botones", "decision", "dilema", "sweating"], emotions: ["overwhelmed", "awkward"] },
-  "Distracted Boyfriend": { tags: ["novio distraido", "tentacion", "distracted"], emotions: ["relatable"] },
-  "This Is Fine": { tags: ["this is fine", "todo bien", "incendio", "perro"], emotions: ["chaos", "unbothered"] },
-  "Disaster Girl": { tags: ["disaster girl", "incendio", "nena"], emotions: ["chaos", "sarcastic"] },
-  "Roll Safe Think About It": { tags: ["think about it", "pensalo", "logica"], emotions: ["sarcastic"] },
-  "Hide the Pain Harold": { tags: ["harold", "dolor", "sonrisa falsa", "stock photo"], emotions: ["fake-enthusiasm", "dead-inside"] },
-  "Woman Yelling At Cat": { tags: ["gato", "gritando", "discusion"], emotions: ["angry", "confused"] },
-  "Surprised Pikachu": { tags: ["pikachu", "sorpresa", "obvio"], emotions: ["shocked", "sarcastic"] },
-  "Change My Mind": { tags: ["change my mind", "opinion", "debate"], emotions: ["sarcastic"] },
-  "Mocking Spongebob": { tags: ["bob esponja", "burla", "spongebob"], emotions: ["sarcastic", "passive-aggressive"] },
-  "Left Exit 12 Off Ramp": { tags: ["salida", "volantazo", "decision"], emotions: ["chaos"] },
-  "Gru's Plan": { tags: ["gru", "plan", "plan fallido"], emotions: ["confused", "shocked"] },
-  "Is This A Pigeon": { tags: ["paloma", "pigeon", "confusion"], emotions: ["confused"] },
-  "Expanding Brain": { tags: ["cerebro", "galaxy brain", "niveles"], emotions: ["sarcastic"] },
-  "Bernie I Am Once Again Asking For Your Support": { tags: ["bernie", "pedir", "otra vez"], emotions: ["tired"] },
-  "Sad Pablo Escobar": { tags: ["esperando", "soledad", "aburrido"], emotions: ["sad", "tired"] },
-  "Waiting Skeleton": { tags: ["esqueleto", "esperando", "eternidad"], emotions: ["tired", "dead-inside"] },
-  "Batman Slapping Robin": { tags: ["batman", "cachetada", "callate"], emotions: ["angry"] },
-  "Success Kid": { tags: ["success kid", "exito", "logro"], emotions: ["celebrating", "happy"] },
-  "Leonardo Dicaprio Cheers": { tags: ["dicaprio", "brindis", "salud"], emotions: ["celebrating"] },
-  "Futurama Fry": { tags: ["fry", "sospecha", "no estoy seguro"], emotions: ["confused"] },
-  "Grumpy Cat": { tags: ["gato grunon", "no"], emotions: ["angry", "unbothered"] },
-  "Boardroom Meeting Suggestion": { tags: ["reunion de directorio", "sugerencia", "ventana", "boardroom"], emotions: ["angry"], categories: ["reuniones", "jefes"] },
-  "Monkey Puppet": { tags: ["mono", "mirar al costado", "incomodo"], emotions: ["awkward"] },
-  "Panik Kalm Panik": { tags: ["panico", "calma", "panik kalm"], emotions: ["overwhelmed", "chaos"] },
-  "Epic Handshake": { tags: ["apreton de manos", "acuerdo", "en comun"], emotions: ["relatable"] },
-  "They're The Same Picture": { tags: ["the office", "pam", "son la misma foto"], emotions: ["confused", "sarcastic"], categories: ["series-peliculas"] },
-  "Tuxedo Winnie The Pooh": { tags: ["winnie pooh", "elegante", "fancy"], emotions: ["sarcastic"] },
-  "UNO Draw 25 Cards": { tags: ["uno", "25 cartas", "antes muerto"], emotions: ["unbothered", "sarcastic"] },
-  "Anakin Padme 4 Panel": { tags: ["anakin", "padme", "verdad"], emotions: ["awkward", "shocked"] },
-  "Running Away Balloon": { tags: ["globo", "huir"], emotions: ["sad"] },
-  "Always Has Been": { tags: ["always has been", "siempre fue", "astronauta"], emotions: ["shocked"] },
-  "Buff Doge vs. Cheems": { tags: ["doge", "cheems", "antes y ahora"], emotions: ["sarcastic"] },
-  "Sleeping Shaq": { tags: ["shaq", "dormido", "despierto"], emotions: ["tired"] },
-  "Laughing Leo": { tags: ["leo", "risa"], emotions: ["happy", "sarcastic"] },
+/** Hand-written tags for well-known reaction templates (by Imgflip template name). */
+const KNOWN: Record<string, { tags: string[]; categories?: string[] }> = {
+  "Drake Hotline Bling": { tags: ["drake", "preferencia", "prefer", "esto no esto si"] },
+  "Two Buttons": { tags: ["dos botones", "decision", "dilema", "sweating"] },
+  "Distracted Boyfriend": { tags: ["novio distraido", "tentacion", "distracted"] },
+  "This Is Fine": { tags: ["this is fine", "todo bien", "incendio", "perro"] },
+  "Disaster Girl": { tags: ["disaster girl", "incendio", "nena"] },
+  "Roll Safe Think About It": { tags: ["think about it", "pensalo", "logica"] },
+  "Hide the Pain Harold": { tags: ["harold", "dolor", "sonrisa falsa", "stock photo"] },
+  "Woman Yelling At Cat": { tags: ["gato", "gritando", "discusion"] },
+  "Surprised Pikachu": { tags: ["pikachu", "sorpresa", "obvio"] },
+  "Change My Mind": { tags: ["change my mind", "opinion", "debate"] },
+  "Mocking Spongebob": { tags: ["bob esponja", "burla", "spongebob"] },
+  "Left Exit 12 Off Ramp": { tags: ["salida", "volantazo", "decision"] },
+  "Gru's Plan": { tags: ["gru", "plan", "plan fallido"] },
+  "Is This A Pigeon": { tags: ["paloma", "pigeon", "confusion"] },
+  "Expanding Brain": { tags: ["cerebro", "galaxy brain", "niveles"] },
+  "Bernie I Am Once Again Asking For Your Support": { tags: ["bernie", "pedir", "otra vez"] },
+  "Sad Pablo Escobar": { tags: ["esperando", "soledad", "aburrido"] },
+  "Waiting Skeleton": { tags: ["esqueleto", "esperando", "eternidad"] },
+  "Batman Slapping Robin": { tags: ["batman", "cachetada", "callate"] },
+  "Success Kid": { tags: ["success kid", "exito", "logro"] },
+  "Leonardo Dicaprio Cheers": { tags: ["dicaprio", "brindis", "salud"] },
+  "Futurama Fry": { tags: ["fry", "sospecha", "no estoy seguro"] },
+  "Grumpy Cat": { tags: ["gato grunon", "no"] },
+  "Boardroom Meeting Suggestion": { tags: ["reunion de directorio", "sugerencia", "ventana", "boardroom"], categories: ["reuniones", "jefes"] },
+  "Monkey Puppet": { tags: ["mono", "mirar al costado", "incomodo"] },
+  "Panik Kalm Panik": { tags: ["panico", "calma", "panik kalm"] },
+  "Epic Handshake": { tags: ["apreton de manos", "acuerdo", "en comun"] },
+  "They're The Same Picture": { tags: ["the office", "pam", "son la misma foto"], categories: ["series-peliculas"] },
+  "Tuxedo Winnie The Pooh": { tags: ["winnie pooh", "elegante", "fancy"] },
+  "UNO Draw 25 Cards": { tags: ["uno", "25 cartas", "antes muerto"] },
+  "Anakin Padme 4 Panel": { tags: ["anakin", "padme", "verdad"] },
+  "Running Away Balloon": { tags: ["globo", "huir"] },
+  "Always Has Been": { tags: ["always has been", "siempre fue", "astronauta"] },
+  "Buff Doge vs. Cheems": { tags: ["doge", "cheems", "antes y ahora"] },
+  "Sleeping Shaq": { tags: ["shaq", "dormido", "despierto"] },
+  "Laughing Leo": { tags: ["leo", "risa"] },
 };
 
 type ImgflipResponse = { success: boolean; data: { memes: { id: string; name: string; url: string; width: number; height: number }[] } };
@@ -63,7 +63,6 @@ export const imgflipAdapter: Adapter = {
         altText: `Plantilla del meme ${m.name}`,
         sourceName: "Imgflip",
         tags: ["plantilla", "template", ...(known?.tags ?? [])],
-        emotions: known?.emotions ?? [],
         categories: ["reacciones", ...(known?.categories ?? [])],
         topical: true,
         license: "fair-use",
@@ -72,21 +71,6 @@ export const imgflipAdapter: Adapter = {
     return { candidates };
   },
 };
-
-/** Words in a template name that hint at the reaction it is used for. */
-const EMOTION_HINTS: [RegExp, string[]][] = [
-  [/\bno+\b.*\bgod\b|\bnoo+\b|\bno god\b/i, ["shocked", "angry"]],
-  [/congratulat|celebrat|party|cheers/i, ["celebrating", "sarcastic"]],
-  [/bankrupt|panic|chaos|fire|burn/i, ["chaos"]],
-  [/happening|excit|ready|yes+\b/i, ["excited"]],
-  [/\bcry|crying|sad|tears/i, ["sad"]],
-  [/annoy|angry|mad\b|furious|stare/i, ["angry", "passive-aggressive"]],
-  [/handshake|awkward|camera|look|smirk/i, ["awkward", "sarcastic"]],
-  [/same picture|confus|what\b|huh/i, ["confused"]],
-  [/\bfalse\b|\bfact\b|\bquestion\b|explain|whiteboard/i, ["sarcastic"]],
-  [/tired|sleep|bored/i, ["tired"]],
-  [/thank|happy|smil|laugh/i, ["happy"]],
-];
 
 const titleCase = (s: string) => s.replace(/(^|\s)\p{L}/gu, (c) => c.toUpperCase());
 
@@ -153,7 +137,6 @@ export const imgflipSearchAdapter: Adapter = {
             if (exclude.some((t) => lower.includes(t))) return;
             seen.add(id);
             taken++;
-            const emotions = [...new Set(EMOTION_HINTS.filter(([re]) => re.test(name)).flatMap(([, e]) => e))];
             const title = titleCase(name.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim());
             const named = f.names.some((n) => lower.includes(n));
             candidates.push({
@@ -167,7 +150,6 @@ export const imgflipSearchAdapter: Adapter = {
               altText: `Escena de ${f.name}: ${title}`,
               sourceName: "Imgflip",
               tags: [...franchiseTagList(f), "plantilla", "template", q],
-              emotions,
               categories: ["series-peliculas", "reacciones"],
               topical: true,
               license: "fair-use",

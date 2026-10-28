@@ -205,24 +205,3 @@ export function MaximizeGlyph() {
     </svg>
   );
 }
-
-export const EMOTION_GLYPHS: Record<string, string> = {
-  happy: "☺",
-  sad: "☹",
-  angry: "!",
-  sarcastic: "¬",
-  tired: "z",
-  "burnt-out": "♨",
-  awkward: "~",
-  shocked: "O",
-  "passive-aggressive": "✉",
-  "fake-enthusiasm": "★",
-  relatable: "✓",
-  chaos: "※",
-  confused: "?",
-  excited: "‼",
-  "dead-inside": "✝",
-  overwhelmed: "≋",
-  unbothered: "☼",
-  celebrating: "♪",
-};

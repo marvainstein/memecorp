@@ -130,7 +130,6 @@ export async function ingestImage(opts: IngestOptions): Promise<IngestResult> {
   await s.put(storageKey, buffer, mime);
   await s.put(thumbKey, thumb, "image/webp");
 
-  const emotions = (values.emotions as string[]) ?? [];
   const categories = (values.categories as string[]) ?? [];
   const row = {
     ...values,
@@ -146,7 +145,7 @@ export async function ingestImage(opts: IngestOptions): Promise<IngestResult> {
     sha256,
     phash,
     dominant_color: dominantColor,
-    keywords: taxonomyKeywords(emotions, categories),
+    keywords: taxonomyKeywords(categories),
     status: values.status ?? "active",
   };
   const cols = Object.keys(row);

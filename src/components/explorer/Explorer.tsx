@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Meme } from "@/lib/memes/types";
 import type { SearchParams, SearchResult, SortMode } from "@/lib/search";
-import { CATEGORIES, EMOTIONS, FORMATS } from "@/lib/memes/taxonomy";
+import { CATEGORIES, FORMATS } from "@/lib/memes/taxonomy";
 import { Dialog } from "../win95/Dialog";
-import { DiceIcon, EMOTION_GLYPHS, FolderIcon, HelpIcon, ImageIcon, InfoIcon, LogoIcon, SearchIcon } from "../win95/Icons";
+import { DiceIcon, FolderIcon, HelpIcon, ImageIcon, InfoIcon, LogoIcon, SearchIcon } from "../win95/Icons";
 import { MenuBar, type Menu } from "../win95/MenuBar";
 import { openAbout } from "../win95/Taskbar";
 import { Window } from "../win95/Window";
@@ -14,7 +14,7 @@ import { MemeDetail } from "./MemeDetail";
 import { MemeGrid, type ViewMode } from "./MemeGrid";
 import { SearchBox, type SearchBoxHandle } from "./SearchBox";
 
-type Filters = { category?: string; emotion?: string; format?: string; lang?: string; sort: SortMode };
+type Filters = { category?: string; format?: string; lang?: string; sort: SortMode };
 
 const EXAMPLES = ["reunión que podría ser un email", "lunes", "jefe", "burnout", "sueldo", "home office", "excel", "renuncia", "deploy viernes", "fake smile"];
 
@@ -34,7 +34,6 @@ function toQuery(q: string, f: Filters) {
   const p = new URLSearchParams();
   if (q.trim()) p.set("q", q.trim());
   if (f.category) p.set("category", f.category);
-  if (f.emotion) p.set("emotion", f.emotion);
   if (f.format) p.set("format", f.format);
   if (f.lang) p.set("lang", f.lang);
   if (f.sort !== "relevance") p.set("sort", f.sort);
@@ -44,7 +43,6 @@ function toQuery(q: string, f: Filters) {
 const describe = (q: string, f: Filters) => {
   const parts: string[] = [];
   if (q.trim()) parts.push(`“${q.trim()}”`);
-  if (f.emotion) parts.push(EMOTIONS.find((e) => e.slug === f.emotion)?.es ?? f.emotion);
   if (f.category) parts.push(CATEGORIES.find((c) => c.slug === f.category)?.es ?? f.category);
   if (f.format) parts.push(f.format.toUpperCase());
   return parts.join(" · ");
@@ -54,7 +52,6 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
   const [q, setQ] = useState(params.q ?? "");
   const [filters, setFilters] = useState<Filters>({
     category: params.category,
-    emotion: params.emotion,
     format: params.format,
     lang: params.lang,
     sort: params.sort ?? "relevance",
@@ -70,7 +67,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
   const [foldersOpen, setFoldersOpen] = useState(false);
 
   const searchBox = useRef<SearchBoxHandle>(null);
-  const emotionSelect = useRef<HTMLSelectElement>(null);
+  const categorySelect = useRef<HTMLSelectElement>(null);
   const pane = useRef<HTMLDivElement>(null);
   const sentinel = useRef<HTMLDivElement>(null);
   const abort = useRef<AbortController | null>(null);
@@ -286,7 +283,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
         accessKey: "B",
         items: [
           { label: "Buscar…", shortcut: "/", icon: <SearchIcon />, onSelect: () => searchBox.current?.focus() },
-          { label: "Filtrar por emoción…", onSelect: () => emotionSelect.current?.focus() },
+          { label: "Filtrar por categoría…", onSelect: () => categorySelect.current?.focus() },
           { label: "Meme al azar", icon: <DiceIcon />, href: "/random" },
         ],
       },
@@ -306,7 +303,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
   );
 
   const label = describe(q, filters);
-  const browsing = !q.trim() && !filters.emotion && !filters.category && !filters.format;
+  const browsing = !q.trim() && !filters.category && !filters.format;
   const title = selected ? selected.title : label ? `Buscar: ${label}` : "Memes populares";
 
   return (
@@ -354,8 +351,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
 
         {/* Filters */}
         <div className="grid grid-cols-2 gap-1.5 px-1 pb-1.5 sm:flex sm:flex-wrap sm:items-center">
-          <FilterSelect label="Categoría" value={filters.category} onChange={(v) => applyFilter({ category: v })} options={CATEGORIES.map((c) => [c.slug, c.es])} />
-          <FilterSelect ref={emotionSelect} label="Emoción" value={filters.emotion} onChange={(v) => applyFilter({ emotion: v })} options={EMOTIONS.map((e) => [e.slug, `${e.es} · ${e.en}`])} />
+          <FilterSelect ref={categorySelect} label="Categoría" value={filters.category} onChange={(v) => applyFilter({ category: v })} options={CATEGORIES.map((c) => [c.slug, c.es])} />
           <FilterSelect label="Formato" value={filters.format} onChange={(v) => applyFilter({ format: v })} options={FORMATS.map((f) => [f.slug, f.label])} />
           <FilterSelect
             label="Orden"
@@ -369,7 +365,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
             ]}
           />
           <button type="button" className="win-btn win-btn-sm md:hidden" onClick={() => setFoldersOpen((o) => !o)} aria-expanded={foldersOpen}>
-            <FolderIcon open={foldersOpen} /> Emociones
+            <FolderIcon open={foldersOpen} /> Categorías
           </button>
           {!browsing && (
             <button type="button" className="win-btn win-btn-sm" onClick={clearAll}>
@@ -380,9 +376,9 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
 
         {foldersOpen && (
           <div className="flex flex-wrap gap-1 px-1 pb-1.5 md:hidden">
-            {EMOTIONS.map((e) => (
-              <button key={e.slug} type="button" className="win-chip" aria-pressed={filters.emotion === e.slug} onClick={() => applyFilter({ emotion: filters.emotion === e.slug ? undefined : e.slug })}>
-                {e.es}
+            {CATEGORIES.map((c) => (
+              <button key={c.slug} type="button" className="win-chip" aria-pressed={filters.category === c.slug} onClick={() => applyFilter({ category: filters.category === c.slug ? undefined : c.slug })}>
+                {c.es}
               </button>
             ))}
           </div>
@@ -392,18 +388,6 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
           {/* Folder tree */}
           <aside className="win-sunken win-scroll hidden w-52 shrink-0 overflow-y-auto p-1 md:block lg:w-60" aria-label="Carpetas">
             <TreeItem depth={0} icon={<FolderIcon open />} label="Todos los memes" active={browsing} onClick={clearAll} />
-            <p className="mt-1 px-1 text-win-dark">Emociones</p>
-            {EMOTIONS.map((e) => (
-              <TreeItem
-                key={e.slug}
-                depth={1}
-                icon={<span className="inline-grid h-4 w-4 place-items-center text-[11px] font-bold text-win-navy">{EMOTION_GLYPHS[e.slug]}</span>}
-                label={e.es}
-                hint={e.en}
-                active={filters.emotion === e.slug}
-                onClick={() => applyFilter({ emotion: filters.emotion === e.slug ? undefined : e.slug })}
-              />
-            ))}
             <p className="mt-1 px-1 text-win-dark">Categorías</p>
             {CATEGORIES.map((c) => (
               <TreeItem
@@ -464,7 +448,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
           <MemeDetail
             meme={selected}
             related={related}
-            onFilter={(f) => applyFilter({ q: f.q ?? "", emotion: f.emotion, category: f.category })}
+            onFilter={(f) => applyFilter({ q: f.q ?? "", category: f.category })}
             onOpenRelated={openMeme}
           />
         )}
@@ -478,7 +462,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
               <b>Situaciones:</b> “reunión que podría ser un email”, “jefe a las 6 de la tarde”, “deploy viernes”.
             </li>
             <li>
-              <b>Emociones:</b> “cansado”, “dead inside”, “fake smile”, “caos”. También podés usar el filtro de emoción.
+              <b>Series:</b> “the office”, “parks and rec”, “nathan for you”, “severance”, o un personaje como “dwight”.
             </li>
             <li>
               <b>En los dos idiomas:</b> “jefe” también encuentra “boss” y “manager”; “lunes” encuentra “monday”.

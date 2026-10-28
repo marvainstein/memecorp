@@ -3,18 +3,17 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Meme } from "@/lib/memes/types";
-import { CATEGORIES, EMOTIONS, LICENSES } from "@/lib/memes/taxonomy";
+import { CATEGORIES, LICENSES } from "@/lib/memes/taxonomy";
 import { formatBytes } from "@/lib/text";
 import { MemeActions } from "./MemeActions";
 
-const emotion = (slug: string) => EMOTIONS.find((e) => e.slug === slug);
 const category = (slug: string) => CATEGORIES.find((c) => c.slug === slug);
 
 type Props = {
   meme: Meme;
   related?: Meme[];
   /** When rendered inside the explorer, chip clicks refine the search there instead of navigating. */
-  onFilter?: (f: { q?: string; emotion?: string; category?: string }) => void;
+  onFilter?: (f: { q?: string; category?: string }) => void;
   onOpenRelated?: (m: Meme) => void;
 };
 
@@ -23,7 +22,7 @@ export function MemeDetail({ meme, related, onFilter, onOpenRelated }: Props) {
   const [tab, setTab] = useState<"general" | "origen">("general");
   const license = LICENSES.find((l) => l.slug === meme.license)?.label ?? meme.license;
 
-  const chip = (label: string, f: { q?: string; emotion?: string; category?: string }, key: string) =>
+  const chip = (label: string, f: { q?: string; category?: string }, key: string) =>
     onFilter ? (
       <button key={key} type="button" className="win-chip" onClick={() => onFilter(f)}>
         {label}
@@ -79,15 +78,9 @@ export function MemeDetail({ meme, related, onFilter, onOpenRelated }: Props) {
                   <dt>Agregado:</dt>
                   <dd>{new Date(meme.createdAt).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })}</dd>
                 </dl>
-                {meme.emotions.length > 0 && (
-                  <>
-                    <div className="win-separator" />
-                    <p>Emociones:</p>
-                    <div className="flex flex-wrap gap-1">{meme.emotions.map((e) => chip(emotion(e)?.es ?? e, { emotion: e }, e))}</div>
-                  </>
-                )}
                 {meme.categories.length > 0 && (
                   <>
+                    <div className="win-separator" />
                     <p>Categorías:</p>
                     <div className="flex flex-wrap gap-1">{meme.categories.map((c) => chip(category(c)?.es ?? c, { category: c }, c))}</div>
                   </>
