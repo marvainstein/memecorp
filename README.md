@@ -99,7 +99,8 @@ los 5 minutos y una ronda completa tarda más), sino en GitHub Actions.
    `DATABASE_POOL_SIZE=3`, `ADMIN_USER` y un `ADMIN_PASSWORD` fuerte. En Vercel la app no arranca el planificador y guarda los
    archivos temporales del OCR en `/tmp` sola.
 5. **GitHub Actions**: en *Settings → Secrets and variables → Actions* cargá `DATABASE_URL`, `S3_BUCKET`, `S3_ENDPOINT`,
-   `S3_ACCESS_KEY_ID` y `S3_SECRET_ACCESS_KEY` (y las claves de Reddit/Pinterest si las tenés). Para probarlo, ejecutá el workflow
+   `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` y, con Backblaze B2, `S3_REGION` (la región del endpoint, p. ej. `us-east-005`; R2
+   usa `auto`, el valor por defecto). Sumá las claves de Reddit/Pinterest si las tenés. Para probarlo, ejecutá el workflow
    *Importar memes* a mano desde la pestaña *Actions*.
 
 Límites del plan gratis: Vercel no acepta requests de más de 4,5 MB, así que las subidas manuales grandes desde el panel hay que hacerlas
