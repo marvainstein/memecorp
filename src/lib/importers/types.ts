@@ -44,6 +44,8 @@ export interface Adapter {
   description: string;
   /** Returns a human-readable reason when the adapter cannot run (missing credentials or config). */
   missing?(config: Record<string, unknown>): string | null;
+  /** What a source with this config will search for, one line per group (shown by `npm run import -- --list`). */
+  describe?(config: Record<string, unknown>): string[];
   fetch(ctx: AdapterContext): Promise<AdapterResult>;
 }
 
