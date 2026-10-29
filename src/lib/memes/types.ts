@@ -34,6 +34,8 @@ export type Meme = {
   imageUrl: string;
   thumbUrl: string;
   pageUrl: string;
+  /** Search results only: shown because it matches some of the words, not all of them. */
+  partialMatch?: boolean;
 };
 
 /** Editable metadata accepted by uploads and the admin editor. */

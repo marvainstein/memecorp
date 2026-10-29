@@ -88,6 +88,7 @@ function Tile({ meme, small, selected, onOpen }: { meme: Meme; small: boolean; s
           />
         </span>
         <span className={`tile-label mt-1 block text-center ${small ? "line-clamp-1 text-[11px]" : "line-clamp-2"}`}>{meme.title}</span>
+        {meme.partialMatch && <PartialBadge />}
       </button>
       {!small && (
         <a
@@ -101,6 +102,15 @@ function Tile({ meme, small, selected, onOpen }: { meme: Meme; small: boolean; s
         </a>
       )}
     </div>
+  );
+}
+
+/** Marks results that match only some of the search words. */
+function PartialBadge() {
+  return (
+    <span className="mx-auto mt-0.5 block w-fit shrink-0 bg-win-yellow px-1 text-[11px] shadow-[var(--bevel-thin-sunken)]" title="Coincide con alguna de las palabras, no con todas">
+      sugerencia
+    </span>
   );
 }
 
@@ -129,6 +139,7 @@ function DetailsView({ items, selectedId, onOpen }: { items: Meme[]; selectedId?
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={m.thumbUrl} alt="" width={28} height={28} loading="lazy" className="h-7 w-7 object-cover" />
                   <span className="line-clamp-1">{m.title}</span>
+                  {m.partialMatch && <PartialBadge />}
                 </button>
               </td>
               <td className="whitespace-nowrap px-2">

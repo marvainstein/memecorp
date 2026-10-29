@@ -15,8 +15,8 @@ export type SearchParams = {
   sort?: SortMode;
   page?: number;
   limit?: number;
-  /** Set by the client when page 1 came back relaxed, so later pages use the same OR query. */
-  relaxed?: boolean;
+  /** Set by the client when page 1 came back relaxed (its `minUnits`), so later pages use the same query. */
+  relaxed?: number;
 };
 
 export type SearchResult = {
@@ -25,14 +25,23 @@ export type SearchResult = {
   page: number;
   limit: number;
   hasMore: boolean;
-  /** True when no meme matched every word and results come from an OR fallback. */
+  /**
+   * True when fewer than MIN_EXACT_RESULTS memes matched every word, so the list was completed with
+   * memes matching some of the words (listed after the exact matches, flagged `partialMatch`).
+   */
   relaxed: boolean;
+  /** How many results match the whole query (all of them unless `relaxed`). */
+  exactTotal: number;
+  /** For relaxed results: how many of the words a partial match had to share. */
+  minUnits: number;
   tookMs: number;
   query: string;
   expandedTerms: string[];
 };
 
 const SYNONYM_TTL_MS = 60_000;
+/** Below this many exact matches, a search is completed with memes matching some of the words. */
+const MIN_EXACT_RESULTS = 5;
 let synonymCache: { at: number; index: SynonymIndex } | null = null;
 
 export async function synonymIndex(): Promise<SynonymIndex> {
@@ -69,7 +78,7 @@ export function parseSearchParams(input: Record<string, string | string[] | unde
     lang: get("lang") === "es" || get("lang") === "en" ? get("lang") : undefined,
     sort: sort === "popular" || sort === "new" ? sort : "relevance",
     page: Math.max(1, Math.min(500, Number(get("page")) || 1)),
-    relaxed: get("relaxed") === "1",
+    relaxed: Math.max(0, Math.min(16, Math.floor(Number(get("relaxed")) || 0))),
   };
 }
 
@@ -90,25 +99,40 @@ export async function search(params: SearchParams): Promise<SearchResult> {
   if (params.format) filters.push(`m.format = ${add(params.format)}`);
   if (params.lang) filters.push(`m.languages @> ARRAY[${add(params.lang)}]::text[]`);
 
-  /** `fuzzy` adds trigram matches (typo tolerance); it is only used when exact matching finds nothing. */
-  const run = async (tsText: string | null, stemmed = "", fuzzyMatch = false, probe = false) => {
+  /**
+   * One way of matching the text. `fuzzy` adds trigram matches (typo tolerance). `exactFirst` (the
+   * strict query) ranks the memes that match it above the rest and flags the others as partial.
+   */
+  type Mode = { ts: string; stemmed: string; fuzzy: boolean; exactFirst?: { ts: string; stemmed: string }; minUnits?: number };
+
+  const run = async (mode: Mode | null, probe = false) => {
     const v = [...values];
     const p = (x: unknown) => {
       v.push(x);
       return `$${v.length}`;
     };
-    let score = "0";
-    const where = [...filters];
-    if (tsText) {
-      const ts = p(tsText);
-      const norm = p(parsed.normalized);
+    const tsquery = (ts: string, stemmed: string) => {
+      const t = p(ts);
       const st = stemmed ? p(stemmed) : null;
-      const tsq = st
-        ? `(to_tsquery('simple', ${ts}) || to_tsquery('english', ${st}) || to_tsquery('spanish', ${st}))`
-        : `to_tsquery('simple', ${ts})`;
+      return st ? `(to_tsquery('simple', ${t}) || to_tsquery('english', ${st}) || to_tsquery('spanish', ${st}))` : `to_tsquery('simple', ${t})`;
+    };
+    let score = "0";
+    let exact = "true";
+    let units = "0";
+    const where = [...filters];
+    if (mode?.ts) {
+      const tsq = tsquery(mode.ts, mode.stemmed);
+      const norm = p(parsed.normalized);
       // Trigram matching only for queries long enough to carry signal; it is what tolerates typos.
-      const fuzzy = fuzzyMatch && parsed.normalized.length >= 3 ? ` OR ${norm} <% m.search_text` : "";
-      where.push(`(m.search_doc @@ ${tsq}${fuzzy})`);
+      const fuzzy = mode.fuzzy && parsed.normalized.length >= 3 ? ` OR ${norm} <% m.search_text` : "";
+      if (mode.minUnits && mode.minUnits > 1) {
+        // Partial matches must share several of the words: one short word alone ("ser" → "series") matches half the catalog.
+        units = parsed.unitQueries.map((u) => `(m.search_doc @@ to_tsquery('simple', ${p(u)}))::int`).join(" + ");
+        where.push(`((m.search_doc @@ ${tsq} AND ${units} >= ${p(mode.minUnits)})${fuzzy})`);
+      } else {
+        where.push(`(m.search_doc @@ ${tsq}${fuzzy})`);
+      }
+      if (mode.exactFirst) exact = `(m.search_doc @@ ${tsquery(mode.exactFirst.ts, mode.exactFirst.stemmed)})`;
       score = `(ts_rank_cd(m.search_doc, ${tsq}, 32) * 4
         + word_similarity(${norm}, m.search_text)
         + CASE WHEN md_norm(m.title) LIKE '%' || ${norm} || '%' THEN 0.6 ELSE 0 END
@@ -120,43 +144,79 @@ export async function search(params: SearchParams): Promise<SearchResult> {
     // With no text there is nothing to be relevant to: the default view (home or a category) shows
     // the newest memes first, so freshly imported ones are visible right away.
     const order =
-      params.sort === "new" || (!tsText && params.sort !== "popular")
+      params.sort === "new" || (!mode?.ts && params.sort !== "popular")
         ? "m.created_at DESC, m.id"
         : params.sort === "popular"
           ? "m.download_count DESC, score DESC, m.id"
           : "score DESC, m.created_at DESC, m.id";
-    const sql = `SELECT ${MEME_COLUMNS.split(",").map((c) => `m.${c.trim()}`).join(", ")},
-        ${score} AS score, count(*) OVER()::int AS total_count
-      FROM memes m WHERE ${where.join(" AND ")}
-      ORDER BY ${order} LIMIT ${p(probe ? 1 : limit)} OFFSET ${p(probe ? 0 : offset)}`;
-    return query<MemeRow & { total_count: number }>(sql, v);
+    // The inner query scores and flags each match; the outer one orders exact matches first and counts.
+    const sql = `SELECT m.*, count(*) OVER()::int AS total_count, count(*) FILTER (WHERE m.exact_match) OVER()::int AS exact_count
+      FROM (
+        SELECT ${MEME_COLUMNS.split(",").map((c) => `m.${c.trim()}`).join(", ")}, ${score} AS score, ${exact} AS exact_match,
+          ${units} AS matched_units
+        FROM memes m WHERE ${where.join(" AND ")}
+      ) m
+      ORDER BY m.exact_match DESC, m.matched_units DESC, ${order} LIMIT ${p(probe ? 1 : limit)} OFFSET ${p(probe ? 0 : offset)}`;
+    return query<MemeRow & { exact_match: boolean; total_count: number; exact_count: number }>(sql, v);
   };
 
-  // Exact (prefix + synonyms + stemming) first; typo tolerance only when that finds nothing, so a
-  // query never drags in every meme that merely looks similar. Then "any word" as a last resort.
-  let relaxed = Boolean(params.relaxed && parsed.units.length > 1);
-  const attempts: [string, string, boolean, boolean][] = relaxed
-    ? [[parsed.any, parsed.anyStemmed, false, true], [parsed.any, parsed.anyStemmed, true, true]]
-    : [
-        [parsed.all, parsed.allStemmed, false, false],
-        [parsed.all, parsed.allStemmed, true, false],
-        ...(parsed.units.length > 1 ? ([[parsed.any, parsed.anyStemmed, true, true]] as [string, string, boolean, boolean][]) : []),
-      ];
-  let rows: Awaited<ReturnType<typeof run>> = [];
-  for (const [ts, stemmed, fuzzy, isRelaxed] of attempts) {
-    rows = await run(ts || null, stemmed, fuzzy);
-    // Past the last page of a mode that did match, stop there instead of falling through to a broader one.
-    if (rows.length || (page > 1 && (await run(ts || null, stemmed, fuzzy, true)).length)) {
-      relaxed = isRelaxed;
-      break;
+  type Rows = Awaited<ReturnType<typeof run>>;
+  /** Matches of a mode; past its last page the rows are empty, so ask for its first row instead. */
+  const totalOf = async (mode: Mode, rows: Rows) => rows[0]?.total_count ?? (page > 1 ? ((await run(mode, true))[0]?.total_count ?? 0) : 0);
+
+  const exactMode: Mode = { ts: parsed.all, stemmed: parsed.allStemmed, fuzzy: false };
+  const fuzzyMode: Mode = { ts: parsed.all, stemmed: parsed.allStemmed, fuzzy: true };
+  // Some of the words, with typo tolerance; memes that match the whole query still come first.
+  const mixedMode = (minUnits: number): Mode => ({
+    ts: parsed.any,
+    stemmed: parsed.anyStemmed,
+    fuzzy: true,
+    exactFirst: { ts: parsed.all, stemmed: parsed.allStemmed },
+    minUnits,
+  });
+  // With three or more words a partial match first needs half of them, then any one.
+  const levels = [...new Set([parsed.units.length >= 3 ? Math.ceil(parsed.units.length / 2) : 1, 1])];
+
+  let relaxed = false;
+  let minUnits = 0;
+  let rows: Rows;
+  if (!parsed.all) {
+    rows = await run(null);
+  } else if (params.relaxed) {
+    // Later pages of a list that page 1 already completed with partial matches.
+    minUnits = params.relaxed;
+    rows = await run(mixedMode(minUnits));
+    relaxed = true;
+  } else {
+    // Exact (prefix + synonyms + stemming) first; typo tolerance only when that finds nothing, so a
+    // query never drags in every meme that merely looks similar.
+    rows = await run(exactMode);
+    let strictTotal = await totalOf(exactMode, rows);
+    if (!strictTotal) {
+      rows = await run(fuzzyMode);
+      strictTotal = await totalOf(fuzzyMode, rows);
+    }
+    // Too few exact matches: complete the list with memes that match some of the words.
+    if (strictTotal < MIN_EXACT_RESULTS && page === 1) {
+      for (const level of levels) {
+        const mixed = await run(mixedMode(level));
+        if ((mixed[0]?.total_count ?? 0) > strictTotal) {
+          rows = mixed;
+          relaxed = true;
+          minUnits = level;
+          break;
+        }
+      }
     }
   }
   const total = rows[0]?.total_count ?? 0;
   if (parsed.normalized && page === 1) void logSearch(params.q ?? "", parsed.normalized, total);
 
   return {
-    items: rows.map(toMeme),
+    items: rows.map((r) => (relaxed && !r.exact_match ? { ...toMeme(r), partialMatch: true } : toMeme(r))),
     total,
+    exactTotal: relaxed ? (rows[0]?.exact_count ?? 0) : total,
+    minUnits,
     page,
     limit,
     hasMore: offset + rows.length < total,

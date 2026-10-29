@@ -107,7 +107,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
     const apiQs = new URLSearchParams(qs);
     apiQs.set("page", String(page));
     apiQs.set("limit", String(PAGE_SIZE));
-    if (page > 1 && state.current.result.relaxed) apiQs.set("relaxed", "1");
+    if (page > 1 && state.current.result.relaxed) apiQs.set("relaxed", String(state.current.result.minUnits || 1));
     setLoading(true);
     setFailed(false);
     try {
@@ -415,7 +415,10 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
             )}
             {result.relaxed && items.length > 0 && (
               <div className="mb-2 flex items-center gap-2 bg-win-yellow p-1.5 shadow-[var(--bevel-thin-sunken)]">
-                <InfoIcon size={16} /> Ningún meme coincide con todas las palabras; mostrando los que coinciden con alguna.
+                <InfoIcon size={16} />
+                {result.exactTotal > 0
+                  ? `${result.exactTotal === 1 ? "Un meme coincide" : `${result.exactTotal} memes coinciden`} con todas las palabras; debajo, sugerencias que coinciden con alguna.`
+                  : "Ningún meme coincide con todas las palabras; mostrando sugerencias que coinciden con alguna."}
               </div>
             )}
             {items.length > 0 ? (
