@@ -8,9 +8,12 @@ const num = (value: string | undefined, fallback: number) => {
   return Number.isFinite(n) && value !== "" && value != null ? n : fallback;
 };
 
+/** Vercel functions: read-only filesystem (except /tmp) and no long-running process. */
+const onVercel = Boolean(process.env.VERCEL);
+
 export const config = {
   databaseUrl: process.env.DATABASE_URL?.trim() || "",
-  dataDir: path.resolve(process.env.DATA_DIR || "data"),
+  dataDir: path.resolve(process.env.DATA_DIR || (onVercel ? "/tmp/memedesk" : "data")),
   storage: {
     driver: (process.env.STORAGE_DRIVER || "local") as "local" | "s3",
     bucket: process.env.S3_BUCKET || "",
@@ -23,7 +26,7 @@ export const config = {
   },
   import: {
     /** "inprocess" runs the scheduler inside the Next server; "off" leaves it to `npm run worker` / cron. */
-    scheduler: (process.env.IMPORT_SCHEDULER || "inprocess") as "inprocess" | "off",
+    scheduler: (process.env.IMPORT_SCHEDULER || (onVercel ? "off" : "inprocess")) as "inprocess" | "off",
     /** Publish imported memes immediately; false sends them to the review queue (status pending). */
     autoPublish: bool(process.env.IMPORT_AUTO_PUBLISH, true),
     userAgent: process.env.IMPORT_USER_AGENT || "MemeDeskBot/1.0 (+https://github.com/marvainstein/memecorp)",
@@ -38,5 +41,8 @@ export const config = {
   },
   reportAutohideThreshold: num(process.env.REPORT_AUTOHIDE_THRESHOLD, 3),
   maxUploadBytes: num(process.env.MAX_UPLOAD_MB, 15) * 1024 * 1024,
-  siteUrl: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/+$/, ""),
+  siteUrl: (
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000")
+  ).replace(/\/+$/, ""),
 };

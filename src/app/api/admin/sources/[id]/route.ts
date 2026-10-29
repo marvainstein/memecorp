@@ -1,6 +1,10 @@
+import { after } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { error, json } from "@/lib/http";
 import { getSource, runSource, sourceProblem, updateSource } from "@/lib/importers/runner";
+
+// Time limit for the background import on serverless hosts (Vercel); unfinished work resumes on the next run.
+export const maxDuration = 300;
 
 export async function PATCH(req: Request, ctx: RouteContext<"/api/admin/sources/[id]">) {
   const denied = requireAdmin(req);
@@ -30,6 +34,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/admin/sources/[
   if (!source) return error("Fuente no encontrada.", 404);
   const problem = sourceProblem(source);
   if (problem) return error(problem);
-  void runSource(id, "manual").catch((err) => console.error(`[import] ${id}:`, err));
+  // after() keeps a serverless function alive until the import finishes (or maxDuration).
+  after(() => runSource(id, "manual").catch((err) => console.error(`[import] ${id}:`, err)));
   return json({ ok: true, started: true }, { status: 202 });
 }

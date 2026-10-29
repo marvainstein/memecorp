@@ -70,8 +70,40 @@ tamaño · solo imágenes estáticas ≥ 200 px · **OCR** del texto impreso (te
 
 - **En el servidor web** (por defecto, `IMPORT_SCHEDULER=inprocess`): arranca con `npm run dev` / `npm start` vía `src/instrumentation.ts`.
 - **Worker aparte** (`IMPORT_SCHEDULER=off` en la web + `npm run worker`): requiere `DATABASE_URL`.
-- **Cron externo**: `GET /api/cron/import` con `Authorization: Bearer $CRON_SECRET` (por ejemplo Vercel Cron cada 15 min).
+- **Cron externo**: `GET /api/cron/import` con `Authorization: Bearer $CRON_SECRET` (cron-job.org, Vercel Cron…). Cada llamada
+  importa durante 4 minutos como máximo.
+- **GitHub Actions** (`.github/workflows/import.yml`): corre `npm run import` cada 3 horas contra la base y el bucket de producción. Es lo
+  que usa el despliegue en Vercel.
 - **Consola**: `npm run import` (lo pendiente), `npm run import -- --all`, `npm run import -- lemmy-work-humor`, `npm run import -- --list`.
+
+## Publicar gratis: Vercel + Neon + Cloudflare R2
+
+La web corre en Vercel, la base en Neon (Postgres) y las imágenes en R2. Las importaciones no corren en Vercel (cada función se corta a
+los 5 minutos y una ronda completa tarda más), sino en GitHub Actions.
+
+1. **Neon** (neon.tech): creá un proyecto en la región AWS US East (la misma que Vercel usa por defecto) y copiá la *connection string*.
+2. **Cloudflare R2**: creá un bucket (p. ej. `memedesk`) y un token de API con permiso *Object Read & Write*. Anotá el Access Key ID,
+   el Secret y el endpoint `https://<account-id>.r2.cloudflarestorage.com`. R2 pide una tarjeta aunque el uso entre en el plan gratis;
+   Backblaze B2 es una alternativa compatible con S3 que no la pide.
+3. **Copiar el catálogo local**: frená `npm run dev`, creá `.env.production.local` (no se sube al repo) y corré `npm run migrate:cloud`.
+   Sube las imágenes que falten y copia la base; se puede repetir sin duplicar nada (`-- --replace` pisa una base con datos).
+   ```
+   DATABASE_URL=postgresql://…neon.tech/neondb?sslmode=require
+   STORAGE_DRIVER=s3
+   S3_BUCKET=memedesk
+   S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
+   S3_ACCESS_KEY_ID=…
+   S3_SECRET_ACCESS_KEY=…
+   ```
+4. **Vercel**: importá el repositorio desde GitHub y cargá en *Environment Variables* las mismas variables, más `S3_REGION=auto`,
+   `DATABASE_POOL_SIZE=3`, `ADMIN_USER` y un `ADMIN_PASSWORD` fuerte. En Vercel la app no arranca el planificador y guarda los
+   archivos temporales del OCR en `/tmp` sola.
+5. **GitHub Actions**: en *Settings → Secrets and variables → Actions* cargá `DATABASE_URL`, `S3_BUCKET`, `S3_ENDPOINT`,
+   `S3_ACCESS_KEY_ID` y `S3_SECRET_ACCESS_KEY` (y las claves de Reddit/Pinterest si las tenés). Para probarlo, ejecutá el workflow
+   *Importar memes* a mano desde la pestaña *Actions*.
+
+Límites del plan gratis: Vercel no acepta requests de más de 4,5 MB, así que las subidas manuales grandes desde el panel hay que hacerlas
+de a una imagen; en repositorios públicos, GitHub pausa los workflows programados tras 60 días sin actividad en el repo.
 
 ## Búsqueda
 

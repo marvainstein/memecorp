@@ -208,6 +208,18 @@ WHERE id = 'reddit-work-humor' AND jsonb_typeof(config->'topical') = 'array'
     // Memes are organized by category only.
     sql: `ALTER TABLE memes DROP COLUMN IF EXISTS emotions;`,
   },
+  {
+    version: 5,
+    name: "trigram_thresholds_per_database",
+    // Connection poolers (Neon, Supabase) don't keep per-session SETs, so store the looser trigram
+    // thresholds on the database too. Skipped silently where it isn't allowed (PGlite, limited roles).
+    sql: `DO $$
+BEGIN
+  EXECUTE format('ALTER DATABASE %I SET pg_trgm.word_similarity_threshold = 0.45', current_database());
+  EXECUTE format('ALTER DATABASE %I SET pg_trgm.similarity_threshold = 0.3', current_database());
+EXCEPTION WHEN others THEN NULL;
+END $$;`,
+  },
 ];
 
 export async function migrate(db: Db): Promise<void> {
