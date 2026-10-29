@@ -17,6 +17,7 @@ export type Candidate = {
   sourceName: string;
   tags?: string[];
   categories?: string[];
+  /** Language of the meme's text; `[]` when it has none (blank templates). Omitted: detected from the text. */
   languages?: string[];
   /** Already known to be about work/office humor (e.g. it came from a work-humor community or query). */
   topical?: boolean;
