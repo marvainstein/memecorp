@@ -1,4 +1,4 @@
-# MemeDesk
+# MemeCorp
 
 Buscador universal y gratuito de **memes corporativos estáticos**, con estética Windows 95/98. Escribís una palabra, una frase o una situación
 (“reunión que podría haber sido un email”, “boss”, “cansado”) y obtenés memes listos para descargar o compartir. El catálogo se llena solo
@@ -41,7 +41,7 @@ Cada **fuente** (`import_sources`) usa un **adaptador** (`src/lib/importers/adap
 Las fuentes sin credenciales se **omiten** (no cuentan como fallo) y el panel indica qué falta. Desde `/admin/sources` se activan, se editan
 (JSON), se cambia su intervalo y se ejecutan a mano; el historial muestra cada corrida.
 
-El catálogo solo tiene memes reales publicados en esas fuentes; MemeDesk no genera imágenes. Las series y películas de oficina que la
+El catálogo solo tiene memes reales publicados en esas fuentes; MemeCorp no genera imágenes. Las series y películas de oficina que la
 gente busca por nombre (*The Office*, *Parks and Recreation*, Nathan Fielder, *Office Space*, *Severance*, *Silicon Valley*,
 *The IT Crowd*, *Succession*, *Brooklyn Nine-Nine*, *Superstore*, *Mad Men*) están en `src/lib/memes/franchises.ts`: de ahí salen
 las búsquedas de plantillas, los sinónimos (“parks and rec” = “parks and recreation”) y el etiquetado automático por personajes y
@@ -63,7 +63,7 @@ tamaño · solo imágenes estáticas ≥ 200 px · **OCR** del texto impreso (te
 - Lock en base de datos por fuente (sirve con varios procesos); las corridas interrumpidas se cierran solas.
 - El buscador lee solo de la base propia: si una fuente cae, todo lo indexado sigue disponible.
 
-> MemeDesk no evade bloqueos (sin proxies rotativos ni navegadores camuflados) y no rastrea sitios cuyos términos o robots.txt lo prohíben.
+> MemeCorp no evade bloqueos (sin proxies rotativos ni navegadores camuflados) y no rastrea sitios cuyos términos o robots.txt lo prohíben.
 > Por eso Pinterest y Reddit van por sus APIs oficiales.
 
 ### Formas de ejecutar el planificador
@@ -82,7 +82,7 @@ La web corre en Vercel, la base en Neon (Postgres) y las imágenes en R2. Las im
 los 5 minutos y una ronda completa tarda más), sino en GitHub Actions.
 
 1. **Neon** (neon.tech): creá un proyecto en la región AWS US East (la misma que Vercel usa por defecto) y copiá la *connection string*.
-2. **Cloudflare R2**: creá un bucket (p. ej. `memedesk`) y un token de API con permiso *Object Read & Write*. Anotá el Access Key ID,
+2. **Cloudflare R2**: creá un bucket (p. ej. `memecorp`) y un token de API con permiso *Object Read & Write*. Anotá el Access Key ID,
    el Secret y el endpoint `https://<account-id>.r2.cloudflarestorage.com`. R2 pide una tarjeta aunque el uso entre en el plan gratis;
    Backblaze B2 es una alternativa compatible con S3 que no la pide.
 3. **Copiar el catálogo local**: frená `npm run dev`, creá `.env.production.local` (no se sube al repo) y corré `npm run migrate:cloud`.
@@ -90,7 +90,7 @@ los 5 minutos y una ronda completa tarda más), sino en GitHub Actions.
    ```
    DATABASE_URL=postgresql://…neon.tech/neondb?sslmode=require
    STORAGE_DRIVER=s3
-   S3_BUCKET=memedesk
+   S3_BUCKET=memecorp
    S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com
    S3_ACCESS_KEY_ID=…
    S3_SECRET_ACCESS_KEY=…

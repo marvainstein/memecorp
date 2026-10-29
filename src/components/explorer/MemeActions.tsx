@@ -43,7 +43,7 @@ export function MemeActions({ meme, compact = false }: { meme: Meme; compact?: b
   const [shareOpen, setShareOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const fileRef = useRef<File | null>(null);
-  const filename = `${meme.slug}-memedesk.${meme.format}`;
+  const filename = `${meme.slug}-memecorp.${meme.format}`;
 
   // Fetch the image ahead of time: mobile browsers only allow navigator.share right after a tap,
   // and waiting for a download first would lose that permission.
@@ -102,7 +102,7 @@ export function MemeActions({ meme, compact = false }: { meme: Meme; compact?: b
     }
   };
 
-  const shareText = encodeURIComponent(`${meme.title} — vía MemeDesk`);
+  const shareText = encodeURIComponent(`${meme.title} — vía MemeCorp`);
 
   return (
     <>

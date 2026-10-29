@@ -128,16 +128,16 @@ class S3Storage implements StorageDriver {
   }
 }
 
-const globalForStorage = globalThis as unknown as { __memedeskStorage?: StorageDriver };
+const globalForStorage = globalThis as unknown as { __memecorpStorage?: StorageDriver };
 
 export function storage(): StorageDriver {
-  if (!globalForStorage.__memedeskStorage) {
+  if (!globalForStorage.__memecorpStorage) {
     if (config.storage.driver === "s3") {
       if (!config.storage.bucket) throw new Error("STORAGE_DRIVER=s3 requires S3_BUCKET");
-      globalForStorage.__memedeskStorage = new S3Storage();
+      globalForStorage.__memecorpStorage = new S3Storage();
     } else {
-      globalForStorage.__memedeskStorage = new LocalStorage();
+      globalForStorage.__memecorpStorage = new LocalStorage();
     }
   }
-  return globalForStorage.__memedeskStorage;
+  return globalForStorage.__memecorpStorage;
 }

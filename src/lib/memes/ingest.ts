@@ -65,7 +65,7 @@ export async function ingestImage(opts: IngestOptions): Promise<IngestResult> {
     return { ok: false, code: "invalid", message: "No es una imagen válida." };
   }
   if ((meta.pages ?? 1) > 1) {
-    return { ok: false, code: "animated", message: "MemeDesk solo admite imágenes estáticas (sin animación)." };
+    return { ok: false, code: "animated", message: "MemeCorp solo admite imágenes estáticas (sin animación)." };
   }
 
   let buffer = opts.buffer;

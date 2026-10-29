@@ -1,5 +1,5 @@
 /** HTTP Basic Auth check for the admin area. Runtime-agnostic (used by proxy.ts and route handlers). */
-export const ADMIN_REALM = 'Basic realm="MemeDesk Admin", charset="UTF-8"';
+export const ADMIN_REALM = 'Basic realm="MemeCorp Admin", charset="UTF-8"';
 
 function safeEqual(a: string, b: string) {
   if (a.length !== b.length) return false;

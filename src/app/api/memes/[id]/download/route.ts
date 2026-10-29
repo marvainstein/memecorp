@@ -10,7 +10,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/memes/[id]/down
   const body = await storage().get(row.storage_key);
   if (!body) return error("El archivo no está disponible.", 404);
   await incrementCounter(id, "download");
-  const filename = `${row.slug || "meme"}-memedesk.${row.format}`;
+  const filename = `${row.slug || "meme"}-memecorp.${row.format}`;
   return new Response(new Uint8Array(body), {
     headers: {
       "Content-Type": row.mime,

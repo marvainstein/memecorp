@@ -40,7 +40,7 @@ export function TakedownForm() {
   return (
     <form onSubmit={submit} className="space-y-2">
       <label className="block">
-        Enlace del meme en MemeDesk *
+        Enlace del meme en MemeCorp *
         <input name="targetUrl" type="url" required className="win-field mt-1" placeholder="https://…/m/abc123" maxLength={2000} />
       </label>
       <label className="block">

@@ -36,10 +36,11 @@ export type ReportRow = {
   resolved_at: string | Date | null;
 };
 
+// The "memedesk:" salt predates the rename to MemeCorp; changing it would stop matching stored report hashes.
 const hashIp = (ip: string) =>
   crypto.createHash("sha256").update(`memedesk:${ip}:${process.env.ADMIN_PASSWORD ?? ""}`).digest("hex").slice(0, 24);
 
-/** Extracts a meme id from a pasted MemeDesk link like https://site/m/abc123 or /files/originals/abc123.png. */
+/** Extracts a meme id from a pasted MemeCorp link like https://site/m/abc123 or /files/originals/abc123.png. */
 export function memeIdFromUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   const m = url.match(/\/m\/([A-Za-z0-9]{6,20})/) ?? url.match(/\/(?:originals|thumbs)\/([A-Za-z0-9]{6,20})\./);

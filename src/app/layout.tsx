@@ -8,11 +8,11 @@ const siteUrl =
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "MemeDesk — buscador de memes corporativos", template: "%s · MemeDesk" },
+  title: { default: "MemeCorp — buscador de memes corporativos", template: "%s · MemeCorp" },
   description:
     "Buscador gratuito de memes corporativos y de humor laboral en español e inglés. Encontrá, descargá y compartí el meme justo en segundos.",
-  applicationName: "MemeDesk",
-  openGraph: { siteName: "MemeDesk", type: "website", locale: "es_AR" },
+  applicationName: "MemeCorp",
+  openGraph: { siteName: "MemeCorp", type: "website", locale: "es_AR" },
   icons: { icon: "/icon.svg" },
 };
 

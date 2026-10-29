@@ -18,16 +18,16 @@ export interface Db {
 /** Looser trigram thresholds than the defaults (0.6 / 0.3) so typos like "reunon" still match. */
 const SESSION_SETTINGS = "SET pg_trgm.word_similarity_threshold = 0.45; SET pg_trgm.similarity_threshold = 0.3;";
 
-const globalForDb = globalThis as unknown as { __memedeskDb?: Promise<Db> };
+const globalForDb = globalThis as unknown as { __memecorpDb?: Promise<Db> };
 
 export function getDb(): Promise<Db> {
-  if (!globalForDb.__memedeskDb) {
-    globalForDb.__memedeskDb = connect().catch((err) => {
-      globalForDb.__memedeskDb = undefined;
+  if (!globalForDb.__memecorpDb) {
+    globalForDb.__memecorpDb = connect().catch((err) => {
+      globalForDb.__memecorpDb = undefined;
       throw err;
     });
   }
-  return globalForDb.__memedeskDb;
+  return globalForDb.__memecorpDb;
 }
 
 export async function query<T = Row>(text: string, params?: unknown[]): Promise<T[]> {
@@ -36,8 +36,8 @@ export async function query<T = Row>(text: string, params?: unknown[]): Promise<
 }
 
 export async function closeDb(): Promise<void> {
-  const pending = globalForDb.__memedeskDb;
-  globalForDb.__memedeskDb = undefined;
+  const pending = globalForDb.__memecorpDb;
+  globalForDb.__memecorpDb = undefined;
   if (pending) await (await pending).close();
 }
 

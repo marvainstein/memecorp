@@ -3,14 +3,14 @@ import { runDue } from "./runner";
 const TICK_MS = 60_000;
 const FIRST_TICK_MS = 20_000;
 
-const g = globalThis as unknown as { __memedeskScheduler?: { timer: ReturnType<typeof setInterval>; busy: boolean } };
+const g = globalThis as unknown as { __memecorpScheduler?: { timer: ReturnType<typeof setInterval>; busy: boolean } };
 
 /**
  * In-process scheduler: every minute, runs the sources whose interval has elapsed. Safe to start
  * more than once (hot reload) and across processes (sources are locked in the database).
  */
 export function startScheduler(log: (msg: string) => void = (m) => console.log(`[import] ${m}`)) {
-  if (g.__memedeskScheduler) return;
+  if (g.__memecorpScheduler) return;
   const state = { timer: null as unknown as ReturnType<typeof setInterval>, busy: false };
   const tick = async () => {
     if (state.busy) return;
@@ -29,6 +29,6 @@ export function startScheduler(log: (msg: string) => void = (m) => console.log(`
   setTimeout(tick, FIRST_TICK_MS);
   state.timer = setInterval(tick, TICK_MS);
   state.timer.unref?.();
-  g.__memedeskScheduler = state;
+  g.__memecorpScheduler = state;
   log("planificador de importación iniciado");
 }

@@ -6,7 +6,7 @@ import { TakedownForm } from "./TakedownForm";
 
 export const metadata: Metadata = {
   title: "Aviso y retirada (DMCA)",
-  description: "Cómo solicitar la retirada de un meme alojado en MemeDesk.",
+  description: "Cómo solicitar la retirada de un meme alojado en MemeCorp.",
 };
 
 export default function TakedownPage() {
@@ -15,7 +15,7 @@ export default function TakedownPage() {
       <Window title="Aviso y retirada de contenido" icon={<FlagIcon />} controls="close" closeHref="/" className="w-full max-w-3xl" bodyClassName="p-3 space-y-3">
         <section className="space-y-2">
           <p>
-            MemeDesk es un buscador gratuito que indexa automáticamente memes publicados en fuentes públicas, con fines de humor, parodia, crítica
+            MemeCorp es un buscador gratuito que indexa automáticamente memes publicados en fuentes públicas, con fines de humor, parodia, crítica
             y comentario. Cada meme guarda un enlace a su publicación de origen. Respetamos los derechos de autor y la privacidad, y actuamos rápido ante cualquier reclamo.
           </p>
           <fieldset className="win-groupbox space-y-1.5">
@@ -40,7 +40,7 @@ export default function TakedownPage() {
           <fieldset className="win-groupbox space-y-1">
             <legend>Para reclamos de derechos de autor, incluí</legend>
             <ul className="list-disc space-y-1 pl-5">
-              <li>El enlace del meme en MemeDesk.</li>
+              <li>El enlace del meme en MemeCorp.</li>
               <li>Una descripción de la obra original y dónde está publicada.</li>
               <li>Tu nombre y un email de contacto.</li>
               <li>Una declaración de buena fe de que sos titular de los derechos o actuás en su nombre.</li>

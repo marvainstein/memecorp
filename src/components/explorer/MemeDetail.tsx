@@ -109,9 +109,9 @@ export function MemeDetail({ meme, related, onFilter, onOpenRelated }: Props) {
                 <dt>Licencia:</dt>
                 <dd>{license}</dd>
                 <dt>Indexado:</dt>
-                <dd>{meme.origin === "import" ? "Automáticamente" : meme.origin === "seed" ? "Original de MemeDesk" : "Por un administrador"}</dd>
+                <dd>{meme.origin === "import" ? "Automáticamente" : meme.origin === "seed" ? "Original de MemeCorp" : "Por un administrador"}</dd>
                 <dt className="col-span-2 mt-2 text-win-dark">
-                  MemeDesk aloja contenido aportado por terceros con fines de humor, parodia y comentario. ¿Es tuyo y querés que lo retiremos?
+                  MemeCorp aloja contenido aportado por terceros con fines de humor, parodia y comentario. ¿Es tuyo y querés que lo retiremos?
                   Usá “Reportar” o el <Link href="/aviso-y-retirada">aviso y retirada</Link>.
                 </dt>
               </dl>

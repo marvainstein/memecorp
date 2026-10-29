@@ -16,7 +16,7 @@ const onVercel = Boolean(process.env.VERCEL);
 
 export const config = {
   databaseUrl: env("DATABASE_URL"),
-  dataDir: path.resolve(process.env.DATA_DIR || (onVercel ? "/tmp/memedesk" : "data")),
+  dataDir: path.resolve(process.env.DATA_DIR || (onVercel ? "/tmp/memecorp" : "data")),
   storage: {
     // A configured bucket implies S3, so a forgotten STORAGE_DRIVER doesn't silently fall back to local disk.
     driver: (env("STORAGE_DRIVER").toLowerCase() || (env("S3_BUCKET") ? "s3" : "local")) as "local" | "s3",
@@ -34,7 +34,7 @@ export const config = {
     scheduler: (process.env.IMPORT_SCHEDULER || (onVercel ? "off" : "inprocess")) as "inprocess" | "off",
     /** Publish imported memes immediately; false sends them to the review queue (status pending). */
     autoPublish: bool(process.env.IMPORT_AUTO_PUBLISH, true),
-    userAgent: process.env.IMPORT_USER_AGENT || "MemeDeskBot/1.0 (+https://github.com/marvainstein/memecorp)",
+    userAgent: process.env.IMPORT_USER_AGENT || "MemeCorpBot/1.0 (+https://github.com/marvainstein/memecorp)",
     maxPerRun: num(process.env.IMPORT_MAX_PER_RUN, 60),
     /** Read the text printed on each imported meme (tesseract.js) so it becomes searchable. */
     ocr: bool(process.env.IMPORT_OCR, true),

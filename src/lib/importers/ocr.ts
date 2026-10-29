@@ -10,7 +10,7 @@ import { config } from "../config";
 type OcrWorker = { recognize: (img: Buffer) => Promise<{ data: { text: string; confidence: number } }>; terminate: () => Promise<unknown> };
 
 const IDLE_MS = 2 * 60_000;
-const g = globalThis as unknown as { __memedeskOcr?: { worker: Promise<OcrWorker>; idle?: ReturnType<typeof setTimeout> } };
+const g = globalThis as unknown as { __memecorpOcr?: { worker: Promise<OcrWorker>; idle?: ReturnType<typeof setTimeout> } };
 
 function langDir() {
   const dir = path.join(config.dataDir, "tessdata");
@@ -26,21 +26,21 @@ function langDir() {
 }
 
 async function worker(): Promise<OcrWorker> {
-  if (!g.__memedeskOcr) {
+  if (!g.__memecorpOcr) {
     const dir = langDir();
     const created = import("tesseract.js").then(async ({ createWorker }) => {
       const w = await createWorker(["spa", "eng"], 1, { langPath: dir, cachePath: dir, gzip: true });
       await w.setParameters({ user_defined_dpi: "150" }); // web images carry no DPI; avoids noisy warnings
       return w as unknown as OcrWorker;
     });
-    g.__memedeskOcr = { worker: created };
-    created.catch(() => (g.__memedeskOcr = undefined));
+    g.__memecorpOcr = { worker: created };
+    created.catch(() => (g.__memecorpOcr = undefined));
   }
-  const state = g.__memedeskOcr;
+  const state = g.__memecorpOcr;
   if (state.idle) clearTimeout(state.idle);
   // Free the WASM worker's memory when imports are idle.
   state.idle = setTimeout(async () => {
-    if (g.__memedeskOcr === state) g.__memedeskOcr = undefined;
+    if (g.__memecorpOcr === state) g.__memecorpOcr = undefined;
     (await state.worker).terminate().catch(() => {});
   }, IDLE_MS);
   state.idle.unref?.();

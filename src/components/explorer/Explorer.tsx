@@ -19,7 +19,7 @@ type Filters = { category?: string; format?: string; lang?: string; sort: SortMo
 const EXAMPLES = ["reunión que podría ser un email", "lunes", "jefe", "burnout", "sueldo", "home office", "excel", "renuncia", "deploy viernes", "fake smile"];
 
 const PAGE_SIZE = 30;
-const VIEW_KEY = "memedesk:view";
+const VIEW_KEY = "memedesk:view"; // pre-rename key, kept so saved preferences survive
 
 /**
  * Updates the address bar without involving the Next router. Next patches history.pushState and
@@ -294,7 +294,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
           { label: "Cómo buscar", icon: <HelpIcon />, onSelect: () => setHelpOpen(true) },
           { label: "Aviso y retirada (DMCA)", href: "/aviso-y-retirada" },
           { type: "separator" },
-          { label: "Acerca de MemeDesk", onSelect: openAbout },
+          { label: "Acerca de MemeCorp", onSelect: openAbout },
         ],
       },
     ],
@@ -308,8 +308,8 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
 
   return (
     <main id="contenido" className="flex min-h-0 flex-1 flex-col md:p-3 lg:p-5">
-      <h1 className="sr-only">MemeDesk: buscador de memes corporativos</h1>
-      <Window title={`MemeDesk — ${title}`} className="mx-auto h-[calc(100dvh-36px)] w-full max-w-[1500px] md:h-[calc(100dvh-36px-24px)] lg:h-[calc(100dvh-36px-40px)]">
+      <h1 className="sr-only">MemeCorp: buscador de memes corporativos</h1>
+      <Window title={`MemeCorp — ${title}`} className="mx-auto h-[calc(100dvh-36px)] w-full max-w-[1500px] md:h-[calc(100dvh-36px-24px)] lg:h-[calc(100dvh-36px-40px)]">
         <MenuBar menus={menus} />
         <div className="win-separator !m-0" />
 

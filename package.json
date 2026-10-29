@@ -1,8 +1,8 @@
 {
-  "name": "memedesk",
+  "name": "memecorp",
   "version": "0.1.0",
   "private": true,
-  "description": "MemeDesk — buscador universal de memes corporativos estáticos",
+  "description": "MemeCorp — buscador universal de memes corporativos estáticos",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

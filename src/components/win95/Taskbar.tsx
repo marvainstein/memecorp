@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog } from "./Dialog";
 import { DiceIcon, FlagIcon, GearIcon, HelpIcon, InfoIcon, LogoIcon, SearchIcon } from "./Icons";
 
-export const ABOUT_EVENT = "memedesk:about";
+export const ABOUT_EVENT = "memecorp:about";
 export const openAbout = () => window.dispatchEvent(new Event(ABOUT_EVENT));
 
 function Clock() {
@@ -54,7 +54,7 @@ export function Taskbar() {
     };
   }, []);
 
-  const section = pathname.startsWith("/admin") ? "Panel de control" : pathname.startsWith("/m/") ? "Ficha del meme" : "MemeDesk";
+  const section = pathname.startsWith("/admin") ? "Panel de control" : pathname.startsWith("/m/") ? "Ficha del meme" : "MemeCorp";
 
   return (
     <>
@@ -104,19 +104,19 @@ export function Taskbar() {
                 }}
               >
                 <HelpIcon size={24} />
-                Acerca de MemeDesk
+                Acerca de MemeCorp
               </button>
             </div>
           </div>
         )}
       </div>
 
-      <Dialog open={aboutOpen} onClose={() => setAboutOpen(false)} title="Acerca de MemeDesk" icon={<HelpIcon />}>
+      <Dialog open={aboutOpen} onClose={() => setAboutOpen(false)} title="Acerca de MemeCorp" icon={<HelpIcon />}>
         <div className="flex gap-3">
           <InfoIcon />
           <div className="space-y-2">
             <p>
-              <b>MemeDesk 98</b> — el buscador universal de memes corporativos estáticos.
+              <b>MemeCorp 98</b> — el buscador universal de memes corporativos estáticos.
             </p>
             <p>Gratis, sin cuentas, sin límites. Buscá por palabras, frases, situaciones o series, en español o inglés.</p>
             <p>
