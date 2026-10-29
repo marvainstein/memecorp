@@ -424,6 +424,17 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
               <EmptyState query={label} failed={failed} onRetry={() => run(q, filters)} onClear={clearAll} />
             )}
             <div ref={sentinel} className="h-1" />
+            {/* Scrolling loads the next page on its own; the button is there when it doesn't (no IntersectionObserver, short screens). */}
+            {result.hasMore && !loading && items.length > 0 && (
+              <div className="my-4 flex flex-col items-center gap-1">
+                <button type="button" className="win-btn" onClick={() => run(q, filters, result.page + 1)}>
+                  Cargar más
+                </button>
+                <span className="text-win-dark">
+                  Mostrando {items.length.toLocaleString("es-AR")} de {result.total.toLocaleString("es-AR")}
+                </span>
+              </div>
+            )}
             {loading && (
               <div className="mx-auto my-4 w-64 max-w-full">
                 <p className="mb-1">Buscando memes…</p>
@@ -437,7 +448,11 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
         </div>
 
         <footer className="win-statusbar px-1 pb-0.5">
-          <span className="win-status-cell w-32 shrink-0">{result.total.toLocaleString("es-AR")} objeto(s)</span>
+          <span className="win-status-cell w-40 shrink-0">
+            {items.length < result.total
+              ? `Mostrando ${items.length.toLocaleString("es-AR")} de ${result.total.toLocaleString("es-AR")}`
+              : `${result.total.toLocaleString("es-AR")} objeto(s)`}
+          </span>
           <span className="win-status-cell min-w-0 flex-1">{label ? `Búsqueda: ${label}` : "Todos los memes"}</span>
           <span className="win-status-cell hidden w-28 shrink-0 sm:block">{loading ? "Buscando…" : `${result.tookMs} ms`}</span>
         </footer>
