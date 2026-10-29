@@ -1,7 +1,7 @@
 /**
  * Copies the local catalog (embedded PGlite in ./data/pglite + images in ./data/uploads) to the
  * production services: a PostgreSQL database (DATABASE_URL, e.g. Neon) and an S3-compatible bucket
- * (STORAGE_DRIVER=s3 + S3_*, e.g. Cloudflare R2).
+ * (S3_*, e.g. Cloudflare R2 or Backblaze B2).
  *
  *   npm run migrate:cloud               # reads .env.production.local
  *   npm run migrate:cloud -- --replace  # overwrite a target database that already has memes
@@ -13,6 +13,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { closeDb, getDb } from "@/lib/db";
+import { config } from "@/lib/config";
 import { mimeFromKey, storage } from "@/lib/storage";
 
 /** Parents before children (foreign keys). */
@@ -59,8 +60,8 @@ async function copyImages(keys: string[]) {
 async function main() {
   const args = process.argv.slice(2);
   if (!process.env.DATABASE_URL) throw new Error("Falta DATABASE_URL (la base de destino, p. ej. Neon).");
-  if (!args.includes("--skip-images") && process.env.STORAGE_DRIVER !== "s3") {
-    throw new Error("Falta STORAGE_DRIVER=s3 y los datos del bucket (S3_*). Usá --skip-images para copiar solo la base.");
+  if (!args.includes("--skip-images") && config.storage.driver !== "s3") {
+    throw new Error("Faltan los datos del bucket (S3_BUCKET y demás S3_*). Usá --skip-images para copiar solo la base.");
   }
 
   const source = await openSource();

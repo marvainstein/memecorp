@@ -15,7 +15,8 @@ export const config = {
   databaseUrl: process.env.DATABASE_URL?.trim() || "",
   dataDir: path.resolve(process.env.DATA_DIR || (onVercel ? "/tmp/memedesk" : "data")),
   storage: {
-    driver: (process.env.STORAGE_DRIVER || "local") as "local" | "s3",
+    // A configured bucket implies S3, so a forgotten STORAGE_DRIVER doesn't silently fall back to local disk.
+    driver: (process.env.STORAGE_DRIVER || (process.env.S3_BUCKET ? "s3" : "local")) as "local" | "s3",
     bucket: process.env.S3_BUCKET || "",
     region: process.env.S3_REGION || "auto",
     endpoint: process.env.S3_ENDPOINT || undefined,
