@@ -85,6 +85,29 @@ export const DEFAULT_SOURCES: SourceSeed[] = [
     },
   },
   {
+    id: "lemmy-es",
+    adapter: "lemmy",
+    name: "Lemmy — memes en español",
+    intervalMinutes: 6 * 60,
+    enabled: true,
+    config: {
+      // Neo Mujico (Mexico) has the largest Spanish-language meme community on Lemmy (memelas). Only searches:
+      // most of the community isn't about work, and its OCR text lets too much through.
+      instance: "https://mujico.org",
+      communities: [],
+      topical: [],
+      queries: [
+        "jefe", "chamba", "trabajo", "oficina", "godin", "sueldo", "quincena", "aguinaldo", "nómina", "junta",
+        "programador", "renuncia", "home office",
+      ],
+      exclude: ["jefe final"],
+      // Images of posts older than about a year are gone from the instance (HTTP 404).
+      sort: "TopYear",
+      minScore: 2,
+      maxPages: 10,
+    },
+  },
+  {
     id: "reddit-work-humor",
     adapter: "reddit",
     name: "Reddit — humor corporativo (API oficial)",

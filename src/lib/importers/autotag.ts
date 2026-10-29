@@ -45,6 +45,8 @@ const WORK_TERMS = [
         ["jefe", "reunion", "email", "lunes", "sueldo", "renuncia", "trabajo", "remoto", "companero", "rrhh", "excel", "powerpoint", "programacion", "deploy", "cliente", "deadline", "productividad", "sinergia", "burnout", "vacaciones", "despido", "entrevista"].includes(g[0]),
       ).flatMap((g) => g.map(normalize)),
       "corporate", "office", "intern", "linkedin", "standup", "jira", "slack", "ticket", "overtime", "9 to 5", "nine to five", "payday", "promotion", "ascenso", "oficina",
+      // Regional slang: Mexico (chamba, godin), Spain (curro, nomina). "nomina" alone would also match "nominate".
+      "chamba", "chambear", "godin", "godinez", "curro", "currar", "la nomina", "mi nomina",
     ].filter((t) => t.length >= 3 && !STOPWORDS.has(t) && !GENERIC.has(t)),
   ),
 ];
@@ -96,7 +98,7 @@ export const CATEGORY_RULES: Record<string, string[]> = {
   ],
   salario: [
     "salary", "salaries", "sueldo", "sueldos", "salario", "salarios", "raise", "money", "paid", "bonus", "aumento",
-    "paycheck", "payday", "plata", "quincena", "aguinaldo",
+    "paycheck", "payday", "plata", "quincena", "aguinaldo", "nomina",
   ],
   renuncias: [
     "quit", "quitting", "i quit", "resign", "resigned", "resignation", "renuncia", "renuncias", "renuncio", "renuncie",
