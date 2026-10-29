@@ -8,22 +8,25 @@ const num = (value: string | undefined, fallback: number) => {
   return Number.isFinite(n) && value !== "" && value != null ? n : fallback;
 };
 
+/** Values pasted into hosting dashboards often carry stray spaces, newlines or quotes; a single one breaks S3 signatures. */
+const env = (name: string) => (process.env[name] ?? "").trim().replace(/^(["'])(.*)\1$/, "$2").trim();
+
 /** Vercel functions: read-only filesystem (except /tmp) and no long-running process. */
 const onVercel = Boolean(process.env.VERCEL);
 
 export const config = {
-  databaseUrl: process.env.DATABASE_URL?.trim() || "",
+  databaseUrl: env("DATABASE_URL"),
   dataDir: path.resolve(process.env.DATA_DIR || (onVercel ? "/tmp/memedesk" : "data")),
   storage: {
     // A configured bucket implies S3, so a forgotten STORAGE_DRIVER doesn't silently fall back to local disk.
-    driver: (process.env.STORAGE_DRIVER || (process.env.S3_BUCKET ? "s3" : "local")) as "local" | "s3",
-    bucket: process.env.S3_BUCKET || "",
-    region: process.env.S3_REGION || "auto",
+    driver: (env("STORAGE_DRIVER").toLowerCase() || (env("S3_BUCKET") ? "s3" : "local")) as "local" | "s3",
+    bucket: env("S3_BUCKET"),
+    region: env("S3_REGION") || "auto",
     // "s3.us-east-005.backblazeb2.com" (as providers often show it) needs a scheme for the SDK.
-    endpoint: (process.env.S3_ENDPOINT?.trim() || undefined)?.replace(/^(?!https?:\/\/)/, "https://"),
-    accessKeyId: process.env.S3_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "",
-    publicUrl: (process.env.S3_PUBLIC_URL || "").replace(/\/+$/, ""),
+    endpoint: (env("S3_ENDPOINT") || undefined)?.replace(/^(?!https?:\/\/)/, "https://"),
+    accessKeyId: env("S3_ACCESS_KEY_ID"),
+    secretAccessKey: env("S3_SECRET_ACCESS_KEY"),
+    publicUrl: env("S3_PUBLIC_URL").replace(/\/+$/, ""),
     forcePathStyle: bool(process.env.S3_FORCE_PATH_STYLE, true),
   },
   import: {
