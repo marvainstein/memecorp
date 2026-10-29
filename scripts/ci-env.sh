@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Loads the import configuration for GitHub Actions into $GITHUB_ENV.
-# Accepts one secret REPOSECRETS holding the whole .env.production.local (KEY=VALUE lines) and/or
+# Accepts one secret REPOSECRETS holding the whole .env.cloud.local (KEY=VALUE lines) and/or
 # one secret per variable; a per-variable secret wins over the same key in REPOSECRETS.
 set -euo pipefail
 
@@ -41,7 +41,7 @@ for key in DATABASE_URL S3_BUCKET S3_ENDPOINT S3_ACCESS_KEY_ID S3_SECRET_ACCESS_
   [ -n "$(get_conf "$key")" ] || missing="$missing $key"
 done
 if [ -n "$missing" ]; then
-  echo "::error::Falta configuración:$missing. Cargala en Settings → Secrets and variables → Actions → Secrets, como un secret REPOSECRETS con las líneas KEY=VALUE de .env.production.local o un secret por variable."
+  echo "::error::Falta configuración:$missing. Cargala en Settings → Secrets and variables → Actions → Secrets, como un secret REPOSECRETS con las líneas KEY=VALUE de .env.cloud.local o un secret por variable."
   exit 1
 fi
 

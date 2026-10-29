@@ -3,7 +3,7 @@
  * production services: a PostgreSQL database (DATABASE_URL, e.g. Neon) and an S3-compatible bucket
  * (S3_*, e.g. Cloudflare R2 or Backblaze B2).
  *
- *   npm run migrate:cloud               # reads .env.production.local
+ *   npm run migrate:cloud               # reads .env.cloud.local
  *   npm run migrate:cloud -- --replace  # overwrite a target database that already has memes
  *   npm run migrate:cloud -- --skip-images
  *
