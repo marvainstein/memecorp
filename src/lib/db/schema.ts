@@ -259,6 +259,13 @@ END $$;`,
     // run them again over the memes that still have no topic category.
     run: addRuleCategories,
   },
+  {
+    version: 8,
+    name: "blank_templates_without_language",
+    // Imgflip templates got "es" or "en" from our own Spanish description ("Plantilla de reacción…") and
+    // their English name; they have no text, so they fit either language filter.
+    sql: `UPDATE memes SET languages = '{}', updated_at = now() WHERE source_name = 'Imgflip' AND languages <> '{}';`,
+  },
 ];
 
 export async function migrate(db: Db): Promise<void> {

@@ -65,6 +65,7 @@ export const imgflipAdapter: Adapter = {
         description: `Plantilla de reacción “${m.name}”, sin texto, lista para usar.`,
         altText: `Plantilla del meme ${m.name}`,
         sourceName: "Imgflip",
+        languages: [],
         tags: ["plantilla", "template", ...(known?.tags ?? [])],
         categories: ["reacciones", ...(known?.categories ?? [])],
         topical: true,
@@ -106,6 +107,8 @@ const templateCandidate = (hit: TemplateHit) => ({
   imageUrlFallbacks: [`https://i.imgflip.com/${hit.key.replace(/\.\w+$/, ".png")}`],
   pageUrl: `https://imgflip.com/meme/${hit.id}`,
   sourceName: "Imgflip",
+  // Blank templates fit any language; detecting one would only read our own Spanish description.
+  languages: [],
   topical: true,
   license: "fair-use",
 });
