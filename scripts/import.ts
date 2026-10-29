@@ -9,6 +9,7 @@
  * With the embedded PGlite database, stop `npm run dev` first (only one process can open it).
  */
 import { closeDb } from "@/lib/db";
+import { ADAPTERS } from "@/lib/importers/registry";
 import { listSources, runDue, runSource, sourceProblem } from "@/lib/importers/runner";
 
 async function main() {
@@ -16,7 +17,8 @@ async function main() {
   if (args.includes("--list")) {
     for (const s of await listSources()) {
       const problem = sourceProblem(s);
-      console.log(`${s.enabled ? "●" : "○"} ${s.id.padEnd(22)} ${s.adapter.padEnd(10)} cada ${s.interval_minutes} min · ${s.total_imported} importados${problem ? ` · ⚠ ${problem}` : ""}`);
+      console.log(`${s.enabled ? "●" : "○"} ${s.id.padEnd(22)} ${s.adapter.padEnd(14)} cada ${s.interval_minutes} min · ${s.total_imported} importados${problem ? ` · ⚠ ${problem}` : ""}`);
+      for (const line of ADAPTERS[s.adapter]?.describe?.(s.config ?? {}) ?? []) console.log(`    ${line}`);
     }
     return;
   }

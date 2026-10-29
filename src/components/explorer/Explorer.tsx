@@ -107,7 +107,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
     const apiQs = new URLSearchParams(qs);
     apiQs.set("page", String(page));
     apiQs.set("limit", String(PAGE_SIZE));
-    if (page > 1 && state.current.result.relaxed) apiQs.set("relaxed", "1");
+    if (page > 1 && state.current.result.relaxed) apiQs.set("relaxed", String(state.current.result.minUnits || 1));
     setLoading(true);
     setFailed(false);
     try {
@@ -304,7 +304,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
 
   const label = describe(q, filters);
   const browsing = !q.trim() && !filters.category && !filters.format;
-  const title = selected ? selected.title : label ? `Buscar: ${label}` : "Memes populares";
+  const title = selected ? selected.title : label ? `Buscar: ${label}` : filters.sort === "popular" ? "Memes populares" : "Memes recientes";
 
   return (
     <main id="contenido" className="flex min-h-0 flex-1 flex-col md:p-3 lg:p-5">
@@ -415,7 +415,10 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
             )}
             {result.relaxed && items.length > 0 && (
               <div className="mb-2 flex items-center gap-2 bg-win-yellow p-1.5 shadow-[var(--bevel-thin-sunken)]">
-                <InfoIcon size={16} /> Ningún meme coincide con todas las palabras; mostrando los que coinciden con alguna.
+                <InfoIcon size={16} />
+                {result.exactTotal > 0
+                  ? `${result.exactTotal === 1 ? "Un meme coincide" : `${result.exactTotal} memes coinciden`} con todas las palabras; debajo, sugerencias que coinciden con alguna.`
+                  : "Ningún meme coincide con todas las palabras; mostrando sugerencias que coinciden con alguna."}
               </div>
             )}
             {items.length > 0 ? (
@@ -424,6 +427,17 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
               <EmptyState query={label} failed={failed} onRetry={() => run(q, filters)} onClear={clearAll} />
             )}
             <div ref={sentinel} className="h-1" />
+            {/* Scrolling loads the next page on its own; the button is there when it doesn't (no IntersectionObserver, short screens). */}
+            {result.hasMore && !loading && items.length > 0 && (
+              <div className="my-4 flex flex-col items-center gap-1">
+                <button type="button" className="win-btn" onClick={() => run(q, filters, result.page + 1)}>
+                  Cargar más
+                </button>
+                <span className="text-win-dark">
+                  Mostrando {items.length.toLocaleString("es-AR")} de {result.total.toLocaleString("es-AR")}
+                </span>
+              </div>
+            )}
             {loading && (
               <div className="mx-auto my-4 w-64 max-w-full">
                 <p className="mb-1">Buscando memes…</p>
@@ -437,7 +451,11 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
         </div>
 
         <footer className="win-statusbar px-1 pb-0.5">
-          <span className="win-status-cell w-32 shrink-0">{result.total.toLocaleString("es-AR")} objeto(s)</span>
+          <span className="win-status-cell w-40 shrink-0">
+            {items.length < result.total
+              ? `Mostrando ${items.length.toLocaleString("es-AR")} de ${result.total.toLocaleString("es-AR")}`
+              : `${result.total.toLocaleString("es-AR")} objeto(s)`}
+          </span>
           <span className="win-status-cell min-w-0 flex-1">{label ? `Búsqueda: ${label}` : "Todos los memes"}</span>
           <span className="win-status-cell hidden w-28 shrink-0 sm:block">{loading ? "Buscando…" : `${result.tookMs} ms`}</span>
         </footer>

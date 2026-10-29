@@ -31,6 +31,7 @@ Cada **fuente** (`import_sources`) usa un **adaptador** (`src/lib/importers/adap
 | --- | --- | --- |
 | Imgflip — plantillas de reacción | API pública de Imgflip | nada |
 | Imgflip — plantillas de series de oficina | Búsqueda pública de plantillas de Imgflip, por serie y personaje | nada |
+| Imgflip — plantillas por tema | Búsqueda pública de plantillas de Imgflip por tema de oficina (reuniones, jefes, lunes, sueldo…) | nada |
 | Lemmy — humor laboral | API abierta de Lemmy (comunidades + búsquedas) | nada |
 | Lemmy — fans de series de oficina | Comunidades de fans (`dundermifflin`, `severance`, `itcrowd`) + búsquedas por serie en comunidades de memes | nada |
 | Reddit — humor corporativo | **API oficial** de Reddit (OAuth, app tipo *script*) | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` |
@@ -48,6 +49,12 @@ las búsquedas de plantillas, los sinónimos (“parks and rec” = “parks and
 frases detectados en el título, el texto o el OCR (solo términos inequívocos: “Lumbergh” sí, “office space” no). Las búsquedas
 en Lemmy solo cuentan resultados de comunidades de memes, así no entran noticias ni hilos de discusión. Para sumar una serie,
 agregala a esa lista.
+
+Las búsquedas por tema (`src/lib/memes/topics.ts`) traen las plantillas clásicas de cada categoría (“Boardroom Meeting Suggestion”,
+“Case Of The Mondays”, “As Per My Last Email”) y les asignan esa categoría; solo se toman las que nombran el tema y no aparecen en
+la lista de exclusiones (juegos, política, noticias). Además, el auto-etiquetado agrega categorías temáticas por palabras clave
+(`CATEGORY_RULES` en `src/lib/importers/autotag.ts`) a los memes que solo tienen categorías genéricas. `npm run import -- --list`
+muestra qué busca cada fuente.
 
 **Pipeline por candidato:** ya visto (por ID de origen o URL) → descarte · lista de bloqueo de contenido → descarte · descarga con límite de
 tamaño · solo imágenes estáticas ≥ 200 px · **OCR** del texto impreso (tesseract.js, español + inglés, local) · filtro de temática laboral
@@ -85,7 +92,9 @@ los 5 minutos y una ronda completa tarda más), sino en GitHub Actions.
 2. **Cloudflare R2**: creá un bucket (p. ej. `memecorp`) y un token de API con permiso *Object Read & Write*. Anotá el Access Key ID,
    el Secret y el endpoint `https://<account-id>.r2.cloudflarestorage.com`. R2 pide una tarjeta aunque el uso entre en el plan gratis;
    Backblaze B2 es una alternativa compatible con S3 que no la pide.
-3. **Copiar el catálogo local**: frená `npm run dev`, creá `.env.production.local` (no se sube al repo) y corré `npm run migrate:cloud`.
+3. **Copiar el catálogo local**: frená `npm run dev`, creá `.env.cloud.local` (no se sube al repo) y corré `npm run migrate:cloud`.
+   No lo llames `.env.production.local`: Next.js carga ese archivo en `npm run build`/`npm start`, y la copia local
+   pasaría a usar (y migrar) la base de producción.
    Sube las imágenes que falten y copia la base; se puede repetir sin duplicar nada (`-- --replace` pisa una base con datos).
    ```
    DATABASE_URL=postgresql://…neon.tech/neondb?sslmode=require
@@ -99,7 +108,7 @@ los 5 minutos y una ronda completa tarda más), sino en GitHub Actions.
    `DATABASE_POOL_SIZE=3`, `ADMIN_USER` y un `ADMIN_PASSWORD` fuerte. En Vercel la app no arranca el planificador y guarda los
    archivos temporales del OCR en `/tmp` sola.
 5. **GitHub Actions**: en *Settings → Secrets and variables → Actions → Secrets* creá un secret `REPOSECRETS` y pegá adentro el
-   contenido de `.env.production.local` (las líneas `KEY=VALUE`). También vale un secret por variable (`DATABASE_URL`, `S3_BUCKET`,
+   contenido de `.env.cloud.local` (las líneas `KEY=VALUE`). También vale un secret por variable (`DATABASE_URL`, `S3_BUCKET`,
    `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, y las claves de Reddit/Pinterest si las tenés). GitHub no
    vuelve a mostrar el valor de un secret: al editarlo aparece vacío aunque esté guardado. Para probarlo, ejecutá el workflow
    *Importar memes* con *Run workflow* desde la pestaña *Actions*.

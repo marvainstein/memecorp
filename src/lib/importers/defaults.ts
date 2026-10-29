@@ -43,6 +43,15 @@ export const DEFAULT_SOURCES: SourceSeed[] = [
     config: { perQuery: 20, trustedTop: 15, maxPages: 3 },
   },
   {
+    id: "imgflip-topics",
+    adapter: "imgflip-topics",
+    name: "Imgflip — plantillas por tema",
+    intervalMinutes: 24 * 60,
+    enabled: true,
+    // Every topic in src/lib/memes/topics.ts; list category slugs to narrow it, e.g. ["reuniones", "jefes"].
+    config: { perQuery: 6, maxPages: 2 },
+  },
+  {
     id: "lemmy-series",
     adapter: "lemmy",
     name: "Lemmy — fans de series de oficina",

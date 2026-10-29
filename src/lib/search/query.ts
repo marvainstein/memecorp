@@ -38,6 +38,8 @@ export type ParsedQuery = {
    */
   allStemmed: string;
   anyStemmed: string;
+  /** tsquery text (simple config) for each unit on its own, to count how many words a meme matches. */
+  unitQueries: string[];
 };
 
 const MAX_VARIANTS = 16;
@@ -97,5 +99,6 @@ export function parseQuery(raw: string, index: SynonymIndex): ParsedQuery {
     any: groups.join(" | "),
     allStemmed: stemmed.every(Boolean) ? stemmed.join(" & ") : "",
     anyStemmed: stemmed.filter(Boolean).join(" | "),
+    unitQueries: groups,
   };
 }

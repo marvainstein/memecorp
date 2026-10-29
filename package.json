@@ -10,7 +10,7 @@
     "lint": "next typegen && tsc --noEmit",
     "import": "tsx scripts/import.ts",
     "worker": "tsx scripts/worker.ts",
-    "migrate:cloud": "tsx --env-file=.env.production.local scripts/migrate-to-cloud.ts"
+    "migrate:cloud": "tsx --env-file=.env.cloud.local scripts/migrate-to-cloud.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1158.0",

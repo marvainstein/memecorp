@@ -1,6 +1,9 @@
 import * as cheerio from "cheerio";
 import { FRANCHISES, franchiseById, franchiseTagList, type Franchise } from "../../memes/franchises";
-import type { Adapter, Candidate } from "../types";
+import { categoryLabel } from "../../memes/taxonomy";
+import { normalize } from "../../text";
+import { TOPIC_SEARCHES, type TopicSearch } from "../../memes/topics";
+import type { Adapter, AdapterContext, Candidate } from "../types";
 
 /** Hand-written tags for well-known reaction templates (by Imgflip template name). */
 const KNOWN: Record<string, { tags: string[]; categories?: string[] }> = {
@@ -76,6 +79,39 @@ const titleCase = (s: string) => s.replace(/(^|\s)\p{L}/gu, (c) => c.toUpperCase
 
 type Cursor = { page?: number };
 
+type TemplateHit = { id: string; name: string; key: string };
+
+/** One page of Imgflip's template search: template id, name and image key (`abc123.jpg`). */
+async function searchTemplates(http: AdapterContext["http"], q: string, page: number): Promise<TemplateHit[]> {
+  const html = await http.text(`https://imgflip.com/memesearch?q=${encodeURIComponent(q)}&page=${page}`, { kind: "page" });
+  const $ = cheerio.load(html);
+  const hits: TemplateHit[] = [];
+  $(".mt-box").each((_, el) => {
+    const link = $(el).find(".mt-title a").first().attr("href") ?? "";
+    const name = $(el).find(".mt-title a").first().text().trim();
+    const thumb = $(el).find("img").first().attr("src") ?? "";
+    const id = link.match(/\/meme\/(\d+)/)?.[1];
+    // Thumbnails live at /4/<key>.jpg; the full template is /<key>.jpg (or .png).
+    const key = thumb.match(/i\.imgflip\.com\/(?:\d+\/)?([a-z0-9]+\.(?:jpe?g|png))$/i)?.[1];
+    if (id && key && name) hits.push({ id, name, key });
+  });
+  return hits;
+}
+
+/** Candidate fields shared by every template found through the search. */
+const templateCandidate = (hit: TemplateHit) => ({
+  externalId: hit.id,
+  imageUrl: `https://i.imgflip.com/${hit.key}`,
+  // Thumbnails are always .jpg; the original may be a .png.
+  imageUrlFallbacks: [`https://i.imgflip.com/${hit.key.replace(/\.\w+$/, ".png")}`],
+  pageUrl: `https://imgflip.com/meme/${hit.id}`,
+  sourceName: "Imgflip",
+  topical: true,
+  license: "fair-use",
+});
+
+const cleanName = (name: string) => titleCase(name.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim());
+
 /** `config.franchises`: ids from FRANCHISES, full Franchise objects for shows not in the list, or omitted for all. */
 function franchisesFrom(config: Record<string, unknown>): Franchise[] {
   if (!Array.isArray(config.franchises)) return FRANCHISES;
@@ -98,6 +134,9 @@ export const imgflipSearchAdapter: Adapter = {
   missing(config) {
     return franchisesFrom(config).length ? null : "Configurá al menos una serie.";
   },
+  describe(config) {
+    return franchisesFrom(config).map((f) => `${f.name}: ${[...f.imgflip.trusted, ...f.imgflip.queries].join(", ")}`);
+  },
   async fetch({ http, config, cursor, log }) {
     const perQuery = Number(config.perQuery ?? 20);
     const trustedTop = Number(config.trustedTop ?? 15);
@@ -118,43 +157,97 @@ export const imgflipSearchAdapter: Adapter = {
       for (const { q, trusted } of searches) {
         requests++;
         try {
-          const html = await http.text(`https://imgflip.com/memesearch?q=${encodeURIComponent(q)}&page=${page}`, { kind: "page" });
-          const $ = cheerio.load(html);
           let taken = 0;
-          $(".mt-box").each((_, el) => {
-            if (taken >= (trusted ? trustedTop : perQuery)) return false;
-            const link = $(el).find(".mt-title a").first().attr("href") ?? "";
-            const name = $(el).find(".mt-title a").first().text().trim();
-            const thumb = $(el).find("img").first().attr("src") ?? "";
-            const id = link.match(/\/meme\/(\d+)/)?.[1];
-            // Thumbnails live at /4/<key>.jpg; the full template is /<key>.jpg (or .png).
-            const key = thumb.match(/i\.imgflip\.com\/(?:\d+\/)?([a-z0-9]+\.(?:jpe?g|png))$/i)?.[1];
-            if (!id || !key || !name || seen.has(id)) return;
-            const lower = name.toLowerCase();
+          for (const hit of await searchTemplates(http, q, page)) {
+            if (taken >= (trusted ? trustedTop : perQuery)) break;
+            if (seen.has(hit.id)) continue;
+            const lower = hit.name.toLowerCase();
             // Show-name searches return the show's templates even when their names don't say so
             // ("Straight to Jail"); character searches must name the show or a character.
-            if (!trusted && !mustMatch.some((t) => lower.includes(t))) return;
-            if (exclude.some((t) => lower.includes(t))) return;
-            seen.add(id);
+            if (!trusted && !mustMatch.some((t) => lower.includes(t))) continue;
+            if (exclude.some((t) => lower.includes(t))) continue;
+            seen.add(hit.id);
             taken++;
-            const title = titleCase(name.replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim());
+            const title = cleanName(hit.name);
             const named = f.names.some((n) => lower.includes(n));
             candidates.push({
-              externalId: id,
-              imageUrl: `https://i.imgflip.com/${key}`,
-              // Thumbnails are always .jpg; the original may be a .png.
-              imageUrlFallbacks: [`https://i.imgflip.com/${key.replace(/\.\w+$/, ".png")}`],
-              pageUrl: `https://imgflip.com/meme/${id}`,
+              ...templateCandidate(hit),
               title: named ? title : `${title} (${f.name})`,
               description: `Plantilla de reacción “${title}” de ${f.name}.`,
               altText: `Escena de ${f.name}: ${title}`,
-              sourceName: "Imgflip",
               tags: [...franchiseTagList(f), "plantilla", "template", q],
               categories: ["series-peliculas", "reacciones"],
-              topical: true,
-              license: "fair-use",
             });
-          });
+          }
+        } catch (err) {
+          failures++;
+          log(`Imgflip “${q}”: ${(err as Error).message}`);
+        }
+      }
+    }
+    if (failures && failures === requests) throw new Error("Fallaron todas las búsquedas de Imgflip");
+    return { candidates, cursor: { page } };
+  },
+};
+
+/** `config.topics`: category slugs to search (default: every topic in TOPIC_SEARCHES). */
+function topicsFrom(config: Record<string, unknown>): TopicSearch[] {
+  if (!Array.isArray(config.topics)) return TOPIC_SEARCHES;
+  return TOPIC_SEARCHES.filter((t) => (config.topics as unknown[]).includes(t.category));
+}
+
+/**
+ * Imgflip's template search by workplace topic (see TOPIC_SEARCHES): the classic templates for each
+ * category, e.g. "Boardroom Meeting Suggestion" for meetings. Takes the `perQuery` most popular
+ * templates whose name mentions the topic.
+ * config: { topics: ["reuniones", ...], perQuery: 6, maxPages: 2 }
+ */
+export const imgflipTopicsAdapter: Adapter = {
+  id: "imgflip-topics",
+  label: "Imgflip (plantillas por tema)",
+  description: "Plantillas de Imgflip sobre temas de oficina (reuniones, jefes, lunes, sueldo…), una categoría por búsqueda.",
+  missing(config) {
+    return topicsFrom(config).length ? null : "Configurá al menos un tema.";
+  },
+  describe(config) {
+    return topicsFrom(config).map((t) => `${categoryLabel(t.category)}: ${t.queries.join(", ")}`);
+  },
+  async fetch({ http, config, cursor, log }) {
+    const perQuery = Number(config.perQuery ?? 6);
+    const maxPages = Number(config.maxPages ?? 2);
+    const page = (((cursor as Cursor | null)?.page ?? 0) % maxPages) + 1;
+
+    const candidates: Candidate[] = [];
+    const seen = new Set<string>();
+    // Popular topics have dozens of uploads of the same template under the same name ("Payday"); keep the most used one.
+    const seenNames = new Set<string>();
+    let requests = 0;
+    let failures = 0;
+    for (const topic of topicsFrom(config)) {
+      const label = categoryLabel(topic.category);
+      for (const q of topic.queries) {
+        requests++;
+        try {
+          let taken = 0;
+          for (const hit of await searchTemplates(http, q, page)) {
+            if (taken >= perQuery) break;
+            const lower = hit.name.toLowerCase();
+            const name = normalize(hit.name);
+            if (seen.has(hit.id) || seenNames.has(name)) continue;
+            if (!topic.mustMatch.some((t) => lower.includes(t)) || topic.exclude?.some((t) => lower.includes(t))) continue;
+            seen.add(hit.id);
+            seenNames.add(name);
+            taken++;
+            const title = cleanName(hit.name);
+            candidates.push({
+              ...templateCandidate(hit),
+              title,
+              description: `Plantilla de reacción “${title}” (${label.toLowerCase()}).`,
+              altText: `Plantilla del meme ${title}`,
+              tags: [...topic.tags, "plantilla", "template", q],
+              categories: [topic.category, "reacciones"],
+            });
+          }
         } catch (err) {
           failures++;
           log(`Imgflip “${q}”: ${(err as Error).message}`);

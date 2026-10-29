@@ -1,5 +1,7 @@
 import type { Db } from "./index";
+import { ruleCategories } from "../importers/autotag";
 import { DEFAULT_SOURCES } from "../importers/defaults";
+import { taxonomyKeywords } from "../memes/taxonomy";
 import { FRANCHISES } from "../memes/franchises";
 import { DEFAULT_SYNONYM_GROUPS } from "../search/synonyms";
 
@@ -10,7 +12,8 @@ import { DEFAULT_SYNONYM_GROUPS } from "../search/synonyms";
 const sqlText = (s: string) => `'${s.replace(/'/g, "''")}'`;
 const sqlTextArray = (list: string[]) => `ARRAY[${list.map(sqlText).join(", ")}]::text[]`;
 
-const MIGRATIONS: { version: number; name: string; sql: string }[] = [
+/** `sql` changes the schema; `run` changes data with code (for rules that live in TypeScript). */
+const MIGRATIONS: { version: number; name: string; sql?: string; run?: (db: Db) => Promise<void> }[] = [
   {
     version: 1,
     name: "initial schema",
@@ -220,6 +223,29 @@ BEGIN
 EXCEPTION WHEN others THEN NULL;
 END $$;`,
   },
+  {
+    version: 6,
+    name: "keyword_topic_categories",
+    // Memes imported before the keyword rules (src/lib/importers/autotag.ts) only had generic categories;
+    // give them the topic categories their text points at. Only adds, and only to memes without a topic.
+    run: async (db) => {
+      const rows = await db.query<{ id: string; categories: string[]; text: string }>(
+        `SELECT id, categories, concat_ws(' ', title, description, alt_text, ocr_text, array_to_string(tags, ' ')) AS text FROM memes`,
+      );
+      const updates = rows.flatMap((r) => {
+        const added = ruleCategories(r.text, r.categories).filter((c) => !r.categories.includes(c));
+        if (!added.length) return [];
+        const categories = [...added, ...r.categories].slice(0, 4);
+        return [{ id: r.id, categories, keywords: taxonomyKeywords(categories) }];
+      });
+      if (!updates.length) return;
+      await db.query(
+        `UPDATE memes m SET categories = u.categories, keywords = u.keywords, updated_at = now()
+         FROM jsonb_to_recordset($1::jsonb) AS u(id text, categories text[], keywords text) WHERE m.id = u.id`,
+        [JSON.stringify(updates)],
+      );
+    },
+  },
 ];
 
 export async function migrate(db: Db): Promise<void> {
@@ -230,7 +256,8 @@ export async function migrate(db: Db): Promise<void> {
   );
   for (const m of MIGRATIONS) {
     if (applied.has(m.version)) continue;
-    await db.exec(m.sql);
+    if (m.sql) await db.exec(m.sql);
+    if (m.run) await m.run(db);
     await db.query("INSERT INTO schema_migrations (version, name) VALUES ($1, $2)", [m.version, m.name]);
   }
 

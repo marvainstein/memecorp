@@ -73,6 +73,38 @@ export function franchiseTags(text: string) {
   return { tags: found.flatMap(franchiseTagList), categories: found.length ? ["series-peliculas"] : [] };
 }
 
+/** Categories that say what kind of meme it is, not what it is about. */
+export const GENERIC_CATEGORIES = new Set(["series-peliculas", "reacciones", "wholesome", "absurdo"]);
+
+/**
+ * Keyword rules for the workplace topics, matched as whole words or phrases (case and accents ignored)
+ * against the title, caption/OCR text and tags. Broader than the taxonomy keywords, which also feed
+ * the search index. Keep them unambiguous enough for captions ("notice" alone is "notice me").
+ */
+export const CATEGORY_RULES: Record<string, string[]> = {
+  jefes: ["boss", "bosses", "manager", "managers", "jefe", "jefes", "regional manager", "assistant to the", "supervisor", "ceo", "management"],
+  reuniones: ["meeting", "meetings", "reunion", "reuniones", "email", "emails", "could have been an email", "calendar", "zoom", "conference call"],
+  burnout: ["burnout", "burned out", "burnt out", "tired", "stress", "stressed", "deadline", "deadlines", "overtime", "exhausted", "agotado", "estres"],
+  salario: ["salary", "sueldo", "raise", "money", "paid", "bonus", "aumento", "paycheck", "payday"],
+  renuncias: ["quit", "i quit", "resign", "resignation", "renuncia", "renuncio", "two weeks notice", "fired", "laid off", "layoffs"],
+  lunes: ["monday", "mondays", "friday", "fridays", "lunes", "viernes", "weekend", "fin de semana"],
+  remoto: ["remote", "home office", "wfh", "work from home", "working from home", "teletrabajo"],
+  // "code" and "production" alone are also dress codes and film productions.
+  programacion: [
+    "deploy", "deployed", "deploying", "bug", "bugs", "coding", "my code", "the code", "your code", "code review", "legacy code",
+    "prod", "in production", "to production", "server", "servers", "programmer", "programmers", "developer", "developers", "debug", "debugging",
+  ],
+};
+
+/** Topic categories the rules find in `text`; none when the meme already has a topic category. */
+export function ruleCategories(text: string, current: string[]): string[] {
+  if (current.some((c) => !GENERIC_CATEGORIES.has(c))) return [];
+  const norm = ` ${normalize(text)} `;
+  return Object.entries(CATEGORY_RULES)
+    .filter(([, keywords]) => keywords.some((k) => norm.includes(` ${normalize(k)} `)))
+    .map(([slug]) => slug);
+}
+
 /** Derives tags, categories and language from whatever text the source gave us. */
 export function autoTag(c: Candidate, extraTags: string[] = []) {
   const text = [c.title, c.description, c.altText, ...(c.tags ?? [])].filter(Boolean).join(" ");
@@ -82,6 +114,7 @@ export function autoTag(c: Candidate, extraTags: string[] = []) {
   const franchise = franchiseTags(text);
   const categories = new Set([...(c.categories ?? []), ...franchise.categories]);
   for (const cat of CATEGORIES) if (keywordsOf(cat).some((k) => matches(norm, words, k))) categories.add(cat.slug);
+  for (const slug of ruleCategories(text, [...categories])) categories.add(slug);
 
   const tags = new Set<string>([...(c.tags ?? []), ...extraTags, ...franchise.tags].map((t) => t.toLowerCase()));
   for (const w of normalize(c.title).split(" ")) {
@@ -91,7 +124,8 @@ export function autoTag(c: Candidate, extraTags: string[] = []) {
 
   return {
     tags: [...tags].slice(0, 16),
-    categories: [...categories].slice(0, 4),
+    // Topic categories first, so the cap never drops them in favor of generic ones.
+    categories: [...categories].sort((a, b) => Number(GENERIC_CATEGORIES.has(a)) - Number(GENERIC_CATEGORIES.has(b))).slice(0, 4),
     languages: c.languages?.length ? c.languages : detectLanguage(text),
   };
 }
