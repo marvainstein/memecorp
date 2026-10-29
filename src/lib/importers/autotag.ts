@@ -126,6 +126,6 @@ export function autoTag(c: Candidate, extraTags: string[] = []) {
     tags: [...tags].slice(0, 16),
     // Topic categories first, so the cap never drops them in favor of generic ones.
     categories: [...categories].sort((a, b) => Number(GENERIC_CATEGORIES.has(a)) - Number(GENERIC_CATEGORIES.has(b))).slice(0, 4),
-    languages: c.languages?.length ? c.languages : detectLanguage(text),
+    languages: c.languages ?? detectLanguage(text),
   };
 }

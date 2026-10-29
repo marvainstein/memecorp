@@ -97,7 +97,8 @@ export async function search(params: SearchParams): Promise<SearchResult> {
   };
   if (params.category) filters.push(`m.categories @> ARRAY[${add(params.category)}]::text[]`);
   if (params.format) filters.push(`m.format = ${add(params.format)}`);
-  if (params.lang) filters.push(`m.languages @> ARRAY[${add(params.lang)}]::text[]`);
+  // Memes without text (blank templates) fit either language.
+  if (params.lang) filters.push(`(m.languages @> ARRAY[${add(params.lang)}]::text[] OR m.languages = '{}')`);
 
   /**
    * One way of matching the text. `fuzzy` adds trigram matches (typo tolerance). `exactFirst` (the

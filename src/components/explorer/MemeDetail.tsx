@@ -72,7 +72,7 @@ export function MemeDetail({ meme, related, onFilter, onOpenRelated }: Props) {
                   <dt>Tamaño:</dt>
                   <dd>{formatBytes(meme.bytes)}</dd>
                   <dt>Idiomas:</dt>
-                  <dd>{meme.languages.map((l) => (l === "es" ? "Español" : l === "en" ? "Inglés" : l)).join(", ") || "—"}</dd>
+                  <dd>{meme.languages.map((l) => (l === "es" ? "Español" : l === "en" ? "Inglés" : l)).join(", ") || "Sin texto"}</dd>
                   <dt>Descargas:</dt>
                   <dd>{meme.downloadCount.toLocaleString("es-AR")}</dd>
                   <dt>Agregado:</dt>
