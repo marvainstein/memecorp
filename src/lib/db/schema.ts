@@ -266,6 +266,17 @@ END $$;`,
     // their English name; they have no text, so they fit either language filter.
     sql: `UPDATE memes SET languages = '{}', updated_at = now() WHERE source_name = 'Imgflip' AND languages <> '{}';`,
   },
+  {
+    version: 9,
+    name: "regional_work_synonyms",
+    // Existing installs: Mexican and Spanish work slang in the synonym groups (fresh installs get it from the defaults).
+    sql: `
+UPDATE synonym_groups SET terms = terms || ARRAY['chamba', 'curro']::text[]
+WHERE 'trabajo' = ANY (terms) AND NOT 'chamba' = ANY (terms);
+UPDATE synonym_groups SET terms = terms || ARRAY['quincena', 'nomina', 'aguinaldo']::text[]
+WHERE 'sueldo' = ANY (terms) AND NOT 'quincena' = ANY (terms);
+`,
+  },
 ];
 
 export async function migrate(db: Db): Promise<void> {

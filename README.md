@@ -34,6 +34,7 @@ Cada **fuente** (`import_sources`) usa un **adaptador** (`src/lib/importers/adap
 | Imgflip — plantillas por tema | Búsqueda pública de plantillas de Imgflip por tema de oficina (reuniones, jefes, lunes, sueldo…) | nada |
 | Lemmy — humor laboral | API abierta de Lemmy (comunidades + búsquedas) | nada |
 | Lemmy — fans de series de oficina | Comunidades de fans (`dundermifflin`, `severance`, `itcrowd`) + búsquedas por serie en comunidades de memes | nada |
+| Lemmy — memes en español | Búsquedas en español (“chamba”, “jefe”, “quincena”…) en Neo Mujico (`mujico.org`), la comunidad de memes en español más grande de Lemmy | nada |
 | Reddit — humor corporativo | **API oficial** de Reddit (OAuth, app tipo *script*) | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` |
 | Pinterest — tableros | **API oficial v5** de Pinterest | `PINTEREST_ACCESS_TOKEN` + IDs de tableros |
 | Feeds RSS / Atom | Cheerio (XML) | URLs de feeds |

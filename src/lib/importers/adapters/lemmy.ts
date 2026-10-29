@@ -1,4 +1,5 @@
 import { isWorkRelated } from "../autotag";
+import { normalize } from "../../text";
 import { isImageUrl, strings, type Adapter, type Candidate } from "../types";
 
 type LemmyPost = {
@@ -12,9 +13,10 @@ type Cursor = { page?: number };
 
 /**
  * Lemmy (federated, open API, no key needed). Reads communities and/or search queries.
- * config: { instance, communities: ["memes@lemmy.world"], queries: ["corporate"], topical: ["workreform@lemmy.world"], sort, minScore, maxPages }
+ * config: { instance, communities: ["memes@lemmy.world"], queries: ["corporate"], topical: ["workreform@lemmy.world"], exclude: ["final boss"], sort, minScore, maxPages }
  * Search results only count from meme communities (`searchCommunities`, a regex on the community name),
  * so news and discussion threads stay out. With `showQueries`, they must also mention a workplace show.
+ * `exclude` drops posts whose title contains one of those phrases (case and accents ignored).
  */
 export const lemmyAdapter: Adapter = {
   id: "lemmy",
@@ -30,6 +32,7 @@ export const lemmyAdapter: Adapter = {
     const maxPages = Number(config.maxPages ?? 5);
     const topical = new Set(strings(config.topical).map((c) => c.toLowerCase()));
     const defaults = (config.defaults ?? {}) as Record<string, { tags?: string[]; categories?: string[] }>;
+    const exclude = strings(config.exclude).map(normalize);
     const memeCommunity = new RegExp(String(config.searchCommunities || "meme|humou?r|funny|shitpost|comic|joke"), "i");
     // Walk one page deeper each run so the catalog keeps growing, then start over.
     const page = (((cursor as Cursor | null)?.page ?? 0) % maxPages) + 1;
@@ -61,6 +64,7 @@ export const lemmyAdapter: Adapter = {
           if (/\.gif(\?|$)/i.test(url) || p.post.url_content_type === "image/gif") continue;
           if (p.post.nsfw || p.community.nsfw || p.counts.score < minScore) continue;
           if (req.query && !memeCommunity.test(p.community.name)) continue;
+          if (exclude.some((e) => ` ${normalize(p.post.name)} `.includes(` ${e} `))) continue;
           const text = `${p.post.name} ${p.post.body ?? ""} ${p.post.alt_text ?? ""}`;
           candidates.push({
             externalId: p.post.ap_id,
