@@ -82,17 +82,33 @@ export const GENERIC_CATEGORIES = new Set(["series-peliculas", "reacciones", "wh
  * the search index. Keep them unambiguous enough for captions ("notice" alone is "notice me").
  */
 export const CATEGORY_RULES: Record<string, string[]> = {
-  jefes: ["boss", "bosses", "manager", "managers", "jefe", "jefes", "regional manager", "assistant to the", "supervisor", "ceo", "management"],
-  reuniones: ["meeting", "meetings", "reunion", "reuniones", "email", "emails", "could have been an email", "calendar", "zoom", "conference call"],
-  burnout: ["burnout", "burned out", "burnt out", "tired", "stress", "stressed", "deadline", "deadlines", "overtime", "exhausted", "agotado", "estres"],
-  salario: ["salary", "sueldo", "raise", "money", "paid", "bonus", "aumento", "paycheck", "payday"],
-  renuncias: ["quit", "i quit", "resign", "resignation", "renuncia", "renuncio", "two weeks notice", "fired", "laid off", "layoffs"],
-  lunes: ["monday", "mondays", "friday", "fridays", "lunes", "viernes", "weekend", "fin de semana"],
-  remoto: ["remote", "home office", "wfh", "work from home", "working from home", "teletrabajo"],
-  // "code" and "production" alone are also dress codes and film productions.
+  jefes: [
+    "boss", "bosses", "manager", "managers", "jefe", "jefes", "jefa", "jefas", "gerente", "gerentes",
+    "regional manager", "assistant to the", "supervisor", "supervisors", "supervisores", "supervisora", "ceo", "management",
+  ],
+  reuniones: [
+    "meeting", "meetings", "reunion", "reuniones", "email", "emails", "correo", "correos", "could have been an email",
+    "calendar", "zoom", "conference call", "videollamada",
+  ],
+  burnout: [
+    "burnout", "burned out", "burnt out", "tired", "stress", "stressed", "deadline", "deadlines", "overtime", "exhausted",
+    "agotado", "agotada", "estres", "estresado", "estresada", "cansado", "cansada", "cansancio", "horas extra",
+  ],
+  salario: [
+    "salary", "salaries", "sueldo", "sueldos", "salario", "salarios", "raise", "money", "paid", "bonus", "aumento",
+    "paycheck", "payday", "plata", "quincena", "aguinaldo",
+  ],
+  renuncias: [
+    "quit", "quitting", "i quit", "resign", "resigned", "resignation", "renuncia", "renuncias", "renuncio", "renuncie",
+    "renunciar", "two weeks notice", "fired", "laid off", "layoffs", "despido", "despidos", "despedido", "despedidos",
+  ],
+  lunes: ["monday", "mondays", "friday", "fridays", "lunes", "viernes", "weekend", "fin de semana", "finde"],
+  remoto: ["remote", "home office", "wfh", "work from home", "working from home", "teletrabajo", "trabajo remoto", "desde casa"],
+  // "code" and "production" alone are also dress codes and film productions (same for "codigo" and "produccion").
   programacion: [
     "deploy", "deployed", "deploying", "bug", "bugs", "coding", "my code", "the code", "your code", "code review", "legacy code",
     "prod", "in production", "to production", "server", "servers", "programmer", "programmers", "developer", "developers", "debug", "debugging",
+    "programador", "programadores", "programadora", "mi codigo", "el codigo", "en produccion", "a produccion", "servidor", "servidores",
   ],
 };
 

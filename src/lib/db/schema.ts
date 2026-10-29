@@ -12,6 +12,28 @@ import { DEFAULT_SYNONYM_GROUPS } from "../search/synonyms";
 const sqlText = (s: string) => `'${s.replace(/'/g, "''")}'`;
 const sqlTextArray = (list: string[]) => `ARRAY[${list.map(sqlText).join(", ")}]::text[]`;
 
+/**
+ * Gives every meme without a topic category the ones the keyword rules (src/lib/importers/autotag.ts)
+ * find in its text. Only adds; memes that already have a topic category are left as they are.
+ */
+async function addRuleCategories(db: Db) {
+  const rows = await db.query<{ id: string; categories: string[]; text: string }>(
+    `SELECT id, categories, concat_ws(' ', title, description, alt_text, ocr_text, array_to_string(tags, ' ')) AS text FROM memes`,
+  );
+  const updates = rows.flatMap((r) => {
+    const added = ruleCategories(r.text, r.categories).filter((c) => !r.categories.includes(c));
+    if (!added.length) return [];
+    const categories = [...added, ...r.categories].slice(0, 4);
+    return [{ id: r.id, categories, keywords: taxonomyKeywords(categories) }];
+  });
+  if (!updates.length) return;
+  await db.query(
+    `UPDATE memes m SET categories = u.categories, keywords = u.keywords, updated_at = now()
+     FROM jsonb_to_recordset($1::jsonb) AS u(id text, categories text[], keywords text) WHERE m.id = u.id`,
+    [JSON.stringify(updates)],
+  );
+}
+
 /** `sql` changes the schema; `run` changes data with code (for rules that live in TypeScript). */
 const MIGRATIONS: { version: number; name: string; sql?: string; run?: (db: Db) => Promise<void> }[] = [
   {
@@ -228,23 +250,14 @@ END $$;`,
     name: "keyword_topic_categories",
     // Memes imported before the keyword rules (src/lib/importers/autotag.ts) only had generic categories;
     // give them the topic categories their text points at. Only adds, and only to memes without a topic.
-    run: async (db) => {
-      const rows = await db.query<{ id: string; categories: string[]; text: string }>(
-        `SELECT id, categories, concat_ws(' ', title, description, alt_text, ocr_text, array_to_string(tags, ' ')) AS text FROM memes`,
-      );
-      const updates = rows.flatMap((r) => {
-        const added = ruleCategories(r.text, r.categories).filter((c) => !r.categories.includes(c));
-        if (!added.length) return [];
-        const categories = [...added, ...r.categories].slice(0, 4);
-        return [{ id: r.id, categories, keywords: taxonomyKeywords(categories) }];
-      });
-      if (!updates.length) return;
-      await db.query(
-        `UPDATE memes m SET categories = u.categories, keywords = u.keywords, updated_at = now()
-         FROM jsonb_to_recordset($1::jsonb) AS u(id text, categories text[], keywords text) WHERE m.id = u.id`,
-        [JSON.stringify(updates)],
-      );
-    },
+    run: addRuleCategories,
+  },
+  {
+    version: 7,
+    name: "keyword_topic_categories_es",
+    // The keyword rules gained Spanish variants and plurals ("jefa", "cansado", "renunciar", "quincena"…);
+    // run them again over the memes that still have no topic category.
+    run: addRuleCategories,
   },
   {
     version: 8,
