@@ -98,10 +98,11 @@ los 5 minutos y una ronda completa tarda más), sino en GitHub Actions.
 4. **Vercel**: importá el repositorio desde GitHub y cargá en *Environment Variables* las mismas variables, más `S3_REGION=auto`,
    `DATABASE_POOL_SIZE=3`, `ADMIN_USER` y un `ADMIN_PASSWORD` fuerte. En Vercel la app no arranca el planificador y guarda los
    archivos temporales del OCR en `/tmp` sola.
-5. **GitHub Actions**: en *Settings → Secrets and variables → Actions* cargá `DATABASE_URL`, `S3_BUCKET`, `S3_ENDPOINT`,
-   `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` y, con Backblaze B2, `S3_REGION` (la región del endpoint, p. ej. `us-east-005`; R2
-   usa `auto`, el valor por defecto). Sumá las claves de Reddit/Pinterest si las tenés. Para probarlo, ejecutá el workflow
-   *Importar memes* a mano desde la pestaña *Actions*.
+5. **GitHub Actions**: en *Settings → Secrets and variables → Actions → Secrets* creá un secret `REPOSECRETS` y pegá adentro el
+   contenido de `.env.production.local` (las líneas `KEY=VALUE`). También vale un secret por variable (`DATABASE_URL`, `S3_BUCKET`,
+   `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, y las claves de Reddit/Pinterest si las tenés). GitHub no
+   vuelve a mostrar el valor de un secret: al editarlo aparece vacío aunque esté guardado. Para probarlo, ejecutá el workflow
+   *Importar memes* con *Run workflow* desde la pestaña *Actions*.
 
 Límites del plan gratis: Vercel no acepta requests de más de 4,5 MB, así que las subidas manuales grandes desde el panel hay que hacerlas
 de a una imagen; en repositorios públicos, GitHub pausa los workflows programados tras 60 días sin actividad en el repo.
