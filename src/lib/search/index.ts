@@ -46,6 +46,14 @@ export function invalidateSynonyms() {
   synonymCache = null;
 }
 
+/** Accepts a category slug ("reuniones") or its label in either language ("Reuniones", "Meetings"). */
+function resolveCategory(value: string | undefined) {
+  if (!value) return undefined;
+  if (isCategory(value)) return value;
+  const n = normalize(value);
+  return CATEGORIES.find((c) => normalize(c.es) === n || normalize(c.en) === n)?.slug;
+}
+
 /** Reads search params from a URL / Next searchParams object, ignoring anything unknown. */
 export function parseSearchParams(input: Record<string, string | string[] | undefined> | URLSearchParams): SearchParams {
   const get = (k: string) => {
@@ -56,7 +64,7 @@ export function parseSearchParams(input: Record<string, string | string[] | unde
   const format = get("format");
   return {
     q: get("q")?.slice(0, 200),
-    category: isCategory(get("category") ?? "") ? get("category") : undefined,
+    category: resolveCategory(get("category")),
     format: format && ["jpg", "png", "webp"].includes(format) ? format : undefined,
     lang: get("lang") === "es" || get("lang") === "en" ? get("lang") : undefined,
     sort: sort === "popular" || sort === "new" ? sort : "relevance",
@@ -106,11 +114,13 @@ export async function search(params: SearchParams): Promise<SearchResult> {
         + CASE WHEN md_norm(m.title) LIKE '%' || ${norm} || '%' THEN 0.6 ELSE 0 END
         + ln(1 + m.download_count) * 0.04)`;
     } else {
-      // Browsing without a query: popularity with a gentle freshness boost.
+      // Browsing without a query ("Populares"): popularity with a gentle freshness boost.
       score = `(ln(1 + m.download_count + m.share_count * 2) + 2 / (1 + extract(epoch FROM now() - m.created_at) / 604800))`;
     }
+    // With no text there is nothing to be relevant to: the default view (home or a category) shows
+    // the newest memes first, so freshly imported ones are visible right away.
     const order =
-      params.sort === "new"
+      params.sort === "new" || (!tsText && params.sort !== "popular")
         ? "m.created_at DESC, m.id"
         : params.sort === "popular"
           ? "m.download_count DESC, score DESC, m.id"

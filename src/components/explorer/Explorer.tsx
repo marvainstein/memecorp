@@ -304,7 +304,7 @@ export function Explorer({ initial, params }: { initial: SearchResult; params: S
 
   const label = describe(q, filters);
   const browsing = !q.trim() && !filters.category && !filters.format;
-  const title = selected ? selected.title : label ? `Buscar: ${label}` : "Memes populares";
+  const title = selected ? selected.title : label ? `Buscar: ${label}` : filters.sort === "popular" ? "Memes populares" : "Memes recientes";
 
   return (
     <main id="contenido" className="flex min-h-0 flex-1 flex-col md:p-3 lg:p-5">
