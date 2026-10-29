@@ -19,7 +19,8 @@ export const config = {
     driver: (process.env.STORAGE_DRIVER || (process.env.S3_BUCKET ? "s3" : "local")) as "local" | "s3",
     bucket: process.env.S3_BUCKET || "",
     region: process.env.S3_REGION || "auto",
-    endpoint: process.env.S3_ENDPOINT || undefined,
+    // "s3.us-east-005.backblazeb2.com" (as providers often show it) needs a scheme for the SDK.
+    endpoint: (process.env.S3_ENDPOINT?.trim() || undefined)?.replace(/^(?!https?:\/\/)/, "https://"),
     accessKeyId: process.env.S3_ACCESS_KEY_ID || "",
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "",
     publicUrl: (process.env.S3_PUBLIC_URL || "").replace(/\/+$/, ""),
